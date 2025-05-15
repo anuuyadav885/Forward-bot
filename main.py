@@ -35,7 +35,7 @@ def extract_ids_from_link(link):
 async def start_cmd(_, msg: Message):
     await msg.reply(
         """
-<blockquote>👋 **Welcome to Advanced Telegram Forward Bot!**</blockquote>
+👋 **Welcome to Advanced Telegram Forward Bot!**
 
 Use:
 /settarget – set target via message link
@@ -46,17 +46,17 @@ Use:
 
 @app.on_message(filters.command("settarget") & filters.private)
 async def set_target(client, message):
-    await message.reply("<blockquote>📩 Send a **message link** from the **target channel**</blockquote>")
+    await message.reply("📩 Send a **message link** from the **target channel**:")
     try:
         link_msg = await client.listen(message.chat.id, timeout=60)
         link = link_msg.text.strip()
         chat_id, _ = extract_ids_from_link(link)
         if not chat_id:
-            return await message.reply("<blockquote>❌ Invalid link</blockquote>")
+            return await message.reply("❌ Invalid link.")
         users.update_one({"user_id": message.from_user.id}, {"$set": {"target_chat": chat_id}}, upsert=True)
-        await message.reply(f"<blockquote>✅ Target set to `{chat_id}`</blockquote>")
+        await message.reply(f"✅ Target set to `{chat_id}`")
     except asyncio.TimeoutError:
-        await message.reply("<blockquote>⏰ Timed out. Please try again.</blockquote>")
+        await message.reply("⏰ Timed out. Please try again.")
 
 @app.on_message(filters.command("forward") & filters.private)
 async def forward_command(client, message):
@@ -65,25 +65,25 @@ async def forward_command(client, message):
 
     user = users.find_one({"user_id": user_id})
     if not user or "target_chat" not in user:
-        return await message.reply("<blockquote>❗ Please set target first using /settarget</blockquote>")
+        return await message.reply("❗ Please set target first using /settarget")
 
     target_chat = user["target_chat"]
 
-    await message.reply("<blockquote>📩 Send the **start message link** from the source channel</blockquote>")
+    await message.reply("📩 Send the **start message link** from the source channel:")
     try:
         start_msg = await client.listen(message.chat.id, timeout=60)
         start_chat, start_id = extract_ids_from_link(start_msg.text.strip())
         if not start_chat or not start_id:
-            return await message.reply("<blockquote>❌ Invalid start message link</blockquote>")
+            return await message.reply("❌ Invalid start message link.")
 
-        await message.reply("<blockquote>📩 Send the **end message link**</blockquote>")
+        await message.reply("📩 Send the **end message link**:")
         end_msg = await client.listen(message.chat.id, timeout=60)
         _, end_id = extract_ids_from_link(end_msg.text.strip())
         if not end_id:
-            return await message.reply("<blockquote>❌ Invalid end message link</blockquote>")
+            return await message.reply("❌ Invalid end message link.")
 
     except asyncio.TimeoutError:
-        return await message.reply("<blockquote>⏰ Timed out. Please try again</blockquote>")
+        return await message.reply("⏰ Timed out. Please try again.")
 
     total = end_id - start_id + 1
     count = 0
@@ -94,7 +94,7 @@ async def forward_command(client, message):
         source_chat = await client.get_chat(start_chat)
         target = await client.get_chat(target_chat)
     except PeerIdInvalid:
-        return await message.reply("<blockquote>❌ Bot doesn't have access. Add it to both source and target</blockquote>")
+        return await message.reply("❌ Bot doesn't have access. Add it to both source and target.")
 
     status = await message.reply(f"🔄 Starting forward from `{source_chat.title}` to `{target.title}`...")
 
@@ -144,6 +144,6 @@ async def forward_command(client, message):
 @app.on_message(filters.command("cancel") & filters.private)
 async def cancel_forwarding(client, message):
     cancel_flags[message.from_user.id] = True
-    await message.reply("<blockquote>🛑 Cancelling... Please wait.</blockquote>")
+    await message.reply("🛑 Cancelling... Please wait.")
 
 app.run()
