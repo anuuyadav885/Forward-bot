@@ -202,7 +202,7 @@ async def forward_command(client, message):
                 f"╚═════════════════════════╝\n\n"
                 f"╔═  📦 𝙁𝙊𝙍𝙒𝘼𝙍𝘿𝙄𝙉𝙂 𝙋𝙍𝙊𝙂𝙍𝙀𝙎𝙎 📦  ═╗\n"
                 f"┃\n"
-                f"┃ 📊 Progress  : `{count + failed}/{total}` ({percent:.1f}%)\n"
+                f"┃ 📊 Progress  : `{count + failed}/{total}` ({percent:.2f}%)\n"
                 f"┃ 📌 Remaining  : `{remaining}`\n"
                 f"┃ ▓ {progress_bar}\n"
                 f"╚═════════════════════════╝\n\n"
@@ -220,7 +220,7 @@ async def forward_command(client, message):
         except Exception as e:
             print(f"Progress update error: {e}")
 
-        await asyncio.sleep(0.4)
+        await asyncio.sleep(0.5)
 
     time_taken = format_eta(time.time() - start_time)
     await status.edit(
