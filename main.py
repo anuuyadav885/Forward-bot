@@ -12,6 +12,7 @@ from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI
 
 # Initialize bot and MongoDB
 app = Client("forward_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+app = listen(app)
 mongo = MongoClient(MONGO_URI)
 db = mongo["forward_bot"]
 users = db["users"]
@@ -30,6 +31,15 @@ def extract_ids_from_link(link):
         chat_id = username if not username.isdigit() else int(username)
     msg_id = int(match.group(3)) if match.group(3) else None
     return chat_id, msg_id
+
+@app.on_message(filters.command("test") & filters.private)
+async def test_cmd(client, message):
+    await message.reply("Send me any text message now:")
+    try:
+        reply = await client.listen(message.chat.id, filters=filters.text, timeout=60)
+        await message.reply(f"You sent: {reply.text}")
+    except Exception as e:
+        await message.reply(f"Error or timeout: {e}")
 
 @app.on_message(filters.command("start"))
 async def start_cmd(_, msg: Message):
