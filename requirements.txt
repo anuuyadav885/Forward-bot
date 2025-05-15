@@ -1,6 +1,8 @@
 pyrogram==2.0.106
 tgcrypto
 pymongo
+pyromod
+pyrofork
 python-dotenv
 Flask==1.1.2
 gunicorn==20.1.0
