@@ -20,7 +20,7 @@ from pyrogram.errors import FloodWait, PeerIdInvalid, RPCError
 from pyrogram.types import User, Message        
 from pyrogram.types.messages_and_media import message
 from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, , CallbackQuery
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from pyrogram.errors.exceptions.bad_request_400 import StickerEmojiInvalid
 
 # Initialize bot and MongoDB
