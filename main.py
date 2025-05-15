@@ -6,7 +6,6 @@ import pymongo
 import asyncio
 import tgcrypto
 import requests
-from logger import logging
 from pyromod import listen
 from pyrogram import enums 
 from Crypto.Cipher import AES
