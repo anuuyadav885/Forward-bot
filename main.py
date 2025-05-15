@@ -131,21 +131,48 @@ async def forward_command(client, message):
 
         elapsed = time.time() - start_time
         percent = (count + failed) / total * 100
-        eta = (elapsed / (count + failed)) * (total - count - failed) if (count + failed) else 0
-        progress = f"{'█' * int(percent // 5)}{'░' * (20 - int(percent // 5))}"
-
+        eta_seconds = (elapsed / (count + failed)) * (total - count - failed) if (count + failed) else 0
+        
+        def format_eta(seconds):
+            delta = datetime.timedelta(seconds=int(seconds))
+            days = delta.days
+            hours, remainder = divmod(delta.seconds, 3600)
+            minutes, secs = divmod(remainder, 60)
+            parts = []
+            if days > 0: parts.append(f"{days}d")
+            if hours > 0: parts.append(f"{hours}h")
+            if minutes > 0: parts.append(f"{minutes}m")
+            if secs > 0 or not parts: parts.append(f"{secs}s")
+            return " ".join(parts)
+        
+        eta = format_eta(eta_seconds)
+        remaining = total - (count + failed)
+        progress_bar = f"{'⚫' * int(percent // 5)}{'⚪' * (10 - int(percent // 5))}"
+        
         try:
             await status.edit(
-                f"**Forwarding...**\n"
-                f"From: `{source_chat.title}`\nTo: `{target.title}`\n"
-                f"{progress} {percent:.1f}%\n"
-                f"✅ Success: {count} | ❌ Failed: {failed}\n"
-                f"⏱ ETA: {int(eta)}s | Total: {total}"
+                f"╔══🎯 𝙎𝙊𝙐𝙍𝘾𝙀 / 𝙏𝘼𝙍𝙂𝙀𝙏 𝙄𝙉𝙁𝙊 🎯══╗\n"
+                f"┃ 📤 From: `{source_chat.title}`\n"
+                f"┃ 📥 To:   `{target.title}`\n"
+                f"╚════════════════════════════╝\n\n"
+                f"╔══📦 𝙁𝙊𝙍𝙒𝘼𝙍𝘿𝙄𝙉𝙂 𝙋𝙍𝙊𝙂𝙍𝙀𝙎𝙎 📦══╗\n"
+                f"┃ 📊 Progress: `{count + failed}/{total}` ({percent:.1f}%)\n"
+                f"┃ 📌 Remaining: `{remaining}`\n"
+                f"┃ ▓ {progress_bar}\n"
+                f"╚════════════════════════════╝\n\n"
+                f"╔══📈 𝙋𝙀𝙍𝙁𝙊𝙍𝙈𝘼𝙉𝘾𝙀 𝙈𝙀𝙏𝙍𝙄𝘾𝙎 📈══╗\n"
+                f"┃ ✅ Success: `{count}`\n"
+                f"┃ ❌ Deleted:  `{failed}`\n"
+                f"╚════════════════════════════╝\n\n"
+                f"╔══⏱️ 𝙏𝙄𝙈𝙄𝙉𝙂 𝘿𝙀𝙏𝘼𝙄𝙇𝙎 ⏱️══╗\n"
+                f"┃ ⌛ Elapsed: `{int(elapsed)}s`\n"
+                f"┃ ⏳ ETA:     `{eta}`\n"
+                f"╚════════════════════════════╝\n\n"
             )
-        except:
-            pass
+        except Exception as e:
+            print(f"Progress update error: {e}")
 
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.2)
 
     await status.edit(
         f"✅ Forwarding complete.\nFrom `{source_chat.title}` to `{target.title}`\n"
