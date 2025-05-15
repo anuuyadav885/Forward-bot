@@ -78,7 +78,7 @@ async def start(client: Client, msg: Message):
     await start_message.edit_text(
         Data.START.format(msg.from_user.mention) +
         "<blockquote>👋 𝙒𝙀𝙇𝘾𝙊𝙈𝙀 𝙏𝙊 𝙁𝙊𝙍𝙒𝘼𝙍𝘿 𝘽𝙊𝙏 👋</blockquote>\n\n"
-        "📚 *Available Commands:*\n"
+        "📚 **Available Commands  :**\n\n"
         "• /target – Set target via message link\n"
         "• /forward – Forward messages via message links\n"
         "• /cancel – Cancel ongoing forwarding\n\n"
@@ -138,7 +138,7 @@ async def forward_command(client, message):
         return await message.reply("<blockquote>❌ Bot doesn't have access. Add it to both source and target</blockquote>")
 
     status = await message.reply(
-        f"╔═════════════════════════╗"
+        f"╔═════════════════════════╗\n"
         f"┃          𝙁𝙊𝙍𝙒𝘼𝙍𝘿𝙄𝙉𝙂 𝙄𝙉𝙄𝙏𝙄𝘼𝙏𝙀𝘿\n"
         f"┃ 🗂 Source : `{source_chat.title}`\n"
         f"┃ 📤 Target : `{target.title}`\n"
@@ -149,7 +149,7 @@ async def forward_command(client, message):
     for msg_id in range(start_id, end_id + 1):
         if cancel_flags.get(user_id):
             await status.edit(
-                f"╔═════════════════════════╗"
+                f"╔═════════════════════════╗\n"
                 f"┃          𝙁𝙊𝙍𝙒𝘼𝙍𝘿𝙄𝙉𝙂 𝘾𝘼𝙉𝘾𝙀𝙇𝙇𝙀𝘿\n"
                 f"┃ 📌 Stopped at Message ID: `{msg_id}`\n"
                 f"┃ 📤 Messages Forwarded: `{count}` out of `{total}`\n"
@@ -190,29 +190,30 @@ async def forward_command(client, message):
         
         eta = format_eta(eta_seconds)
         remaining = total - (count + failed)
-        progress_bar = f"{'⚫' * int(percent // 5)}{'⚪' * (10 - int(percent // 5))}"
+        progress_bar = f"{'█' * int(percent // 5)}{'░' * (20 - int(percent // 5))}"
+        elapsed_text = format_eta(int(elapsed))
         
         try:
             await status.edit(
-                f"╔═════════════════════════╗"
+                f"╔═════════════════════════╗\n"
                 f"┃          🎯 𝙎𝙊𝙐𝙍𝘾𝙀 / 𝙏𝘼𝙍𝙂𝙀𝙏 𝙄𝙉𝙁𝙊 🎯\n"
                 f"┃ 📤 From  : `{source_chat.title}`\n"
                 f"┃ 📥 To  :  `{target.title}`\n"
                 f"╚═════════════════════════╝\n\n"
-                f"╔═════════════════════════╗"
+                f"╔═════════════════════════╗\n"
                 f"┃          📦 𝙁𝙊𝙍𝙒𝘼𝙍𝘿𝙄𝙉𝙂 𝙋𝙍𝙊𝙂𝙍𝙀𝙎𝙎 📦\n"
                 f"┃ 📊 Progress  : `{count + failed}/{total}` ({percent:.1f}%)\n"
                 f"┃ 📌 Remaining  : `{remaining}`\n"
                 f"┃ ▓ {progress_bar}\n"
                 f"╚═════════════════════════╝\n\n"
-                f"╔═════════════════════════╗"
+                f"╔═════════════════════════╗\n"
                 f"┃          📈 𝙋𝙀𝙍𝙁𝙊𝙍𝙈𝘼𝙉𝘾𝙀 𝙈𝙀𝙏𝙍𝙄𝘾𝙎 📈\n"
                 f"┃ ✅ Success  : `{count}`\n"
                 f"┃ ❌ Deleted  :  `{failed}`\n"
                 f"╚═════════════════════════╝\n\n"
-                f"╔═════════════════════════╗"
+                f"╔═════════════════════════╗\n"
                 f"┃          ⏱️ 𝙏𝙄𝙈𝙄𝙉𝙂 𝘿𝙀𝙏𝘼𝙄𝙇𝙎 ⏱️\n"
-                f"┃ ⌛ Elapsed  : `{int(elapsed)}s`\n"
+                f"┃ ⌛ Elapsed  : `{elapsed_text}`\n"
                 f"┃ ⏳ ETA  :  `{eta}`\n"
                 f"╚═════════════════════════╝\n\n"
             )
@@ -223,7 +224,7 @@ async def forward_command(client, message):
 
     time_taken = format_eta(time.time() - start_time)
     await status.edit(
-        f"╔═════════════════════════╗"
+        f"╔═════════════════════════╗\n"
         f"┃          ✅ 𝙁𝙊𝙍𝙒𝘼𝙍𝘿𝙄𝙉𝙂 𝘾𝙊𝙈𝙋𝙇𝙀𝙏𝙀 ✅\n"
         f"┃ 📤 From  : `{source_chat.title}`\n"
         f"┃ 🎯 To  : `{target.title}`\n"
@@ -238,7 +239,7 @@ async def forward_command(client, message):
 async def cancel_forwarding(client, message):
     cancel_flags[message.from_user.id] = True
     await message.reply(
-        f"╔═════════════════════════╗"
+        f"╔═════════════════════════╗\n"
         f"┃          🛑 𝘾𝘼𝙉𝘾𝙀𝙇 𝙍𝙀𝙌𝙐𝙀𝙎𝙏𝙀𝘿 🛑\n"
         f"┃ ⚙️ Attempting to halt forwarding...\n"
         f"┃ ⏳ Please wait a moment.\n"
