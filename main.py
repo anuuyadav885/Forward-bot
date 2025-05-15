@@ -1,10 +1,13 @@
 import os
+import re
 import asyncio
 import logging
+import time
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pymongo import MongoClient
 from pyrogram.errors import FloodWait, PeerIdInvalid, RPCError
+from pyromod import listen
 from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI
 
 # Initialize bot and MongoDB
@@ -13,53 +16,87 @@ mongo = MongoClient(MONGO_URI)
 db = mongo["forward_bot"]
 users = db["users"]
 
-# Store cancel flags per user
 cancel_flags = {}
+
+# Utility to extract chat_id and message_id from a message link
+def extract_ids_from_link(link):
+    match = re.search(r"https://t.me/(c/)?([\w_]+)/?(\d+)?", link)
+    if not match:
+        return None, None
+    if match.group(1):  # private group/channel
+        chat_id = int(f"-100{match.group(2)}")
+    else:
+        username = match.group(2)
+        chat_id = username if not username.isdigit() else int(username)
+    msg_id = int(match.group(3)) if match.group(3) else None
+    return chat_id, msg_id
 
 @app.on_message(filters.command("start"))
 async def start_cmd(_, msg: Message):
-    text = """
-👋 **Welcome to Advanced Telegram Forward Bot!**
+    await msg.reply(
+        """
+<blockquote>👋 **Welcome to Advanced Telegram Forward Bot!**</blockquote>
 
 Use:
-/settarget <target_chat_id>
-/forward <source_chat_id> <start_msg_id> <end_msg_id>
-/cancel to cancel ongoing forwarding
-    """
-    await msg.reply(text)
+/settarget – set target via message link
+/forward – forward messages via message links
+/cancel – cancel ongoing forwarding
+        """
+    )
 
 @app.on_message(filters.command("settarget") & filters.private)
 async def set_target(client, message):
-    if len(message.command) < 2:
-        return await message.reply("Usage: /settarget <target_chat_id>")
-    target_chat = message.command[1]
-    users.update_one({"user_id": message.from_user.id}, {"$set": {"target_chat": target_chat}}, upsert=True)
-    await message.reply(f"✅ Target chat set to `{target_chat}`")
+    await message.reply("<blockquote>📩 Send a **message link** from the **target channel**</blockquote>")
+    try:
+        link_msg = await client.listen(message.chat.id, timeout=60)
+        link = link_msg.text.strip()
+        chat_id, _ = extract_ids_from_link(link)
+        if not chat_id:
+            return await message.reply("<blockquote>❌ Invalid link</blockquote>")
+        users.update_one({"user_id": message.from_user.id}, {"$set": {"target_chat": chat_id}}, upsert=True)
+        await message.reply(f"<blockquote>✅ Target set to `{chat_id}`</blockquote>")
+    except asyncio.TimeoutError:
+        await message.reply("<blockquote>⏰ Timed out. Please try again.</blockquote>")
 
 @app.on_message(filters.command("forward") & filters.private)
-async def forward_range(client, message):
-    args = message.command
-    if len(args) != 4:
-        return await message.reply("Usage: /forward <source_chat_id> <start_msg_id> <end_msg_id>")
-
+async def forward_command(client, message):
     user_id = message.from_user.id
     cancel_flags[user_id] = False
 
-    source_chat, start_id, end_id = args[1], int(args[2]), int(args[3])
     user = users.find_one({"user_id": user_id})
     if not user or "target_chat" not in user:
-        return await message.reply("❗ Please set target first using /settarget")
+        return await message.reply("<blockquote>❗ Please set target first using /settarget</blockquote>")
 
     target_chat = user["target_chat"]
+
+    await message.reply("<blockquote>📩 Send the **start message link** from the source channel</blockquote>")
+    try:
+        start_msg = await client.listen(message.chat.id, timeout=60)
+        start_chat, start_id = extract_ids_from_link(start_msg.text.strip())
+        if not start_chat or not start_id:
+            return await message.reply("<blockquote>❌ Invalid start message link</blockquote>")
+
+        await message.reply("<blockquote>📩 Send the **end message link**</blockquote>")
+        end_msg = await client.listen(message.chat.id, timeout=60)
+        _, end_id = extract_ids_from_link(end_msg.text.strip())
+        if not end_id:
+            return await message.reply("<blockquote>❌ Invalid end message link</blockquote>")
+
+    except asyncio.TimeoutError:
+        return await message.reply("<blockquote>⏰ Timed out. Please try again</blockquote>")
+
     total = end_id - start_id + 1
     count = 0
+    failed = 0
+    start_time = time.time()
 
     try:
-        await client.get_chat(source_chat)
+        source_chat = await client.get_chat(start_chat)
+        target = await client.get_chat(target_chat)
     except PeerIdInvalid:
-        return await message.reply("❌ Bot hasn't interacted with the source chat yet.\nPlease forward one message manually using the bot.")
+        return await message.reply("<blockquote>❌ Bot doesn't have access. Add it to both source and target</blockquote>")
 
-    status = await message.reply(f"🔄 Forwarding started...\n0/{total} messages.")
+    status = await message.reply(f"🔄 Starting forward from `{source_chat.title}` to `{target.title}`...")
 
     for msg_id in range(start_id, end_id + 1):
         if cancel_flags.get(user_id):
@@ -68,33 +105,45 @@ async def forward_range(client, message):
             return
 
         try:
-            msg = await client.get_messages(source_chat, msg_id)
+            msg = await client.get_messages(start_chat, msg_id)
             if msg and not getattr(msg, "empty", False) and not getattr(msg, "protected_content", False):
                 await msg.copy(target_chat)
                 count += 1
+            else:
+                failed += 1
         except FloodWait as e:
             await asyncio.sleep(e.value)
             continue
-        except PeerIdInvalid:
-            await status.edit("❌ Error: Peer ID is invalid. Make sure the bot is added and has access.")
-            return
-        except RPCError as e:
-            print(f"Error at msg_id {msg_id}: {e}")
+        except RPCError:
+            failed += 1
             continue
+
+        elapsed = time.time() - start_time
+        percent = (count + failed) / total * 100
+        eta = (elapsed / (count + failed)) * (total - count - failed) if (count + failed) else 0
+        progress = f"{'█' * int(percent // 5)}{'░' * (20 - int(percent // 5))}"
+
+        try:
+            await status.edit(
+                f"**Forwarding...**\n"
+                f"From: `{source_chat.title}`\nTo: `{target.title}`\n"
+                f"{progress} {percent:.1f}%\n"
+                f"✅ Success: {count} | ❌ Failed: {failed}\n"
+                f"⏱ ETA: {int(eta)}s | Total: {total}"
+            )
+        except:
+            pass
 
         await asyncio.sleep(0.5)
 
-        if count % 20 == 0 or msg_id == end_id:
-            try:
-                await status.edit(f"🔄 Forwarding...\n{count}/{total} done.")
-            except:
-                pass
-
-    await status.edit(f"✅ Completed.\nForwarded {count}/{total} messages.")
+    await status.edit(
+        f"✅ Forwarding complete.\nFrom `{source_chat.title}` to `{target.title}`\n"
+        f"✅ Success: {count} | ❌ Failed: {failed} | Total: {total}"
+    )
 
 @app.on_message(filters.command("cancel") & filters.private)
 async def cancel_forwarding(client, message):
     cancel_flags[message.from_user.id] = True
-    await message.reply("🛑 Cancelling... Please wait.")
+    await message.reply("<blockquote>🛑 Cancelling... Please wait.</blockquote>")
 
 app.run()
