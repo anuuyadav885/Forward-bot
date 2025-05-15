@@ -123,6 +123,7 @@ async def start(client: Client, msg: Message):
         "• /target – Set target via message link\n"
         "• /forward – Forward messages via message links\n"
         "• /cancel – Cancel ongoing forwarding\n\n"
+        "• /filters – Edit caption in forwarding\n\n"
         "🚀 *Use the bot to forward messages fast and easily!* 🌟\n"
     )
 @app.on_message(filters.command("filters") & filters.private)
