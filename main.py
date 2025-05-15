@@ -13,7 +13,7 @@ from pyrogram import enums
 from Crypto.Cipher import AES
 from pymongo import MongoClient
 from aiohttp import ClientSession    
-from pyrogram.types import Message   
+from pyrogram.types import Message, BotCommand  
 from pyrogram import Client, filters
 from base64 import b64encode, b64decode
 from pyrogram.errors import FloodWait, PeerIdInvalid, RPCError
@@ -30,6 +30,25 @@ db = mongo["forward_bot"]
 users = db["users"]
 auth_col = db["auth_users"]
 cancel_flags = {}
+
+
+@app.on_message(filters.command("set") & filters.user(OWNER_ID))
+async def set_bot_commands(client, message):
+    commands = [
+        BotCommand("start", "🚀 Start the bot"),
+        BotCommand("add", "➕ Add authorized user"),
+        BotCommand("rem", "➖ Remove authorized user"),
+        BotCommand("clear", "🗑️ Clear all authorized users"),
+        BotCommand("users", "👥 List premium users"),
+        BotCommand("target", "🎯 Set target channel"),
+        BotCommand("targetinfo", "ℹ️ Show current target"),
+        BotCommand("forward", "📤 Forward messages"),
+        BotCommand("reset", "♻️ Reset filters & target"),
+        BotCommand("settings", "⚙️ Open settings menu"),
+    ]
+
+    await client.set_bot_commands(commands)
+    await message.reply("✅ Bot commands set successfully with emojis and proper order.")
 
 def is_authorized(user_id):
     return auth_col.find_one({"_id": user_id}) or user_id == OWNER_ID
@@ -124,6 +143,8 @@ async def start(client: Client, msg: Message):
         "• /forward – Forward messages via message links\n"
         "• /cancel – Cancel ongoing forwarding\n\n"
         "• /filters – Edit caption in forwarding\n\n"
+        "• /reset – Reset settings\n\n"
+        "• /targetinfo –Information about target\n\n"
         "🚀 *Use the bot to forward messages fast and easily!* 🌟\n"
     )
 @app.on_message(filters.command("filters") & filters.private)
@@ -180,6 +201,24 @@ async def set_filters(client, message):
         else:
             await message.reply("❌ Invalid format. Please try again.")
 
+@app.on_message(filters.command("reset") & filters.private)
+async def reset_selected_settings(client, message):
+    user_id = message.from_user.id
+
+    users.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "target_chat": None,
+                "filters.replace": {},
+                "filters.delete": [],
+                "filters.remove_links": False
+            }
+        },
+        upsert=True
+    )
+
+    await message.reply("<b>♻️ Reset complete:</b>\n• Target channel\n• Replace text\n• Delete text\n• Remove links")
 
 @app.on_message(filters.command("target") & filters.private)
 async def set_target(client, message):
@@ -198,6 +237,29 @@ async def set_target(client, message):
         await message.reply(f"✅ Target set to `{chat_id}`")
     except asyncio.TimeoutError:
         await message.reply("<blockquote>⏰ Timed out. Please try again</blockquote>")
+
+@app.on_message(filters.command("targetinfo") & filters.private)
+async def target_info(client, message):
+    user_id = message.from_user.id
+    user = users.find_one({"user_id": user_id})
+    target_chat_id = user.get("target_chat") if user else None
+
+    if not target_chat_id:
+        return await message.reply("❌ No target is currently set.")
+
+    try:
+        chat = await client.get_chat(target_chat_id)
+        await message.reply(
+            f"🎯 Current Target:\n\n"
+            f"• Title: <b>{chat.title}</b>\n"
+            f"• ID: <code>{target_chat_id}</code>"
+        )
+    except Exception:
+        await message.reply(
+            f"🎯 Current Target ID: <code>{target_chat_id}</code>\n\n"
+            f"(⚠️ Bot may not have access to retrieve the title)"
+        )
+
 
 @app.on_message(filters.command("forward") & filters.private)
 async def forward_command(client, message):
@@ -311,7 +373,7 @@ async def forward_command(client, message):
         
         eta = format_eta(eta_seconds)
         remaining = total - (count + failed)
-        progress_bar = f"{'🟩' * int(percent // 10)}{'⬜' * (10 - int(percent // 10))}"
+        progress_bar = f"{'⚫' * int(percent // 10)}{'⚪' * (10 - int(percent // 10))}"
         elapsed_text = format_eta(int(elapsed))
         
         try:
