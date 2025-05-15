@@ -125,6 +125,60 @@ async def start(client: Client, msg: Message):
         "• /cancel – Cancel ongoing forwarding\n\n"
         "🚀 *Use the bot to forward messages fast and easily!* 🌟\n"
     )
+@app.on_message(filters.command("filters") & filters.private)
+async def set_filters(client, message):
+    user_id = message.from_user.id
+    users.update_one({"user_id": user_id}, {"$setOnInsert": {"filters": {}}}, upsert=True)
+    filters_data = users.find_one({"user_id": user_id}).get("filters", {})
+
+    replace = filters_data.get("replace", {})
+    delete = filters_data.get("delete", [])
+    remove_links = filters_data.get("remove_links", False)
+
+    await message.reply(
+        "**🔧 Current Filters:**\n"
+        f"🔁 Replace: `{replace}`\n"
+        f"❌ Delete: `{delete}`\n"
+        f"🔗 Remove Links: `{remove_links}`\n\n"
+        "**Send filters in one of these formats:**\n"
+        "`word1 => word2` to replace\n"
+        "`delete: word` to delete word\n"
+        "`remove_links: true/false` to toggle link removal\n\n"
+        "Type `/done` to finish.",
+    )
+
+    while True:
+        try:
+            response = await client.listen(message.chat.id, timeout=120)
+        except asyncio.TimeoutError:
+            return await message.reply("⏳ Timed out. Run /filters again.")
+        
+        text = response.text.strip()
+
+        if text.lower() == "/done":
+            return await message.reply("✅ Filters updated!")
+
+        if "=>" in text:
+            old, new = [t.strip() for t in text.split("=>", 1)]
+            replace[old] = new
+            users.update_one({"user_id": user_id}, {"$set": {"filters.replace": replace}})
+            await message.reply(f"🔁 Added replace: `{old}` => `{new}`")
+
+        elif text.lower().startswith("delete:"):
+            word = text.split("delete:", 1)[1].strip()
+            if word not in delete:
+                delete.append(word)
+                users.update_one({"user_id": user_id}, {"$set": {"filters.delete": delete}})
+            await message.reply(f"❌ Will delete: `{word}`")
+
+        elif text.lower().startswith("remove_links:"):
+            val = text.split("remove_links:", 1)[1].strip().lower() in ["true", "yes", "1"]
+            users.update_one({"user_id": user_id}, {"$set": {"filters.remove_links": val}})
+            await message.reply(f"🔗 Remove links set to: `{val}`")
+
+        else:
+            await message.reply("❌ Invalid format. Please try again.")
+
 
 @app.on_message(filters.command("target") & filters.private)
 async def set_target(client, message):
@@ -209,17 +263,34 @@ async def forward_command(client, message):
         try:
             msg = await client.get_messages(start_chat, msg_id)
             if msg and not getattr(msg, "empty", False) and not getattr(msg, "protected_content", False):
-                await msg.copy(target_chat)
-                count += 1
+                try:
+                    caption = msg.caption
+                    user_data = users.find_one({"user_id": user_id})
+                    filters_data = user_data.get("filters", {})
+                    
+                    if caption:
+                        for old, new in filters_data.get("replace", {}).items():
+                            caption = caption.replace(old, new)
+                        for word in filters_data.get("delete", []):
+                            caption = caption.replace(word, "")
+                        if filters_data.get("remove_links", False):
+                            caption = re.sub(r'https?://\S+', '', caption)
+                            caption = re.sub(r'@\w+', '', caption)  # Remove usernames
+                    await msg.copy(
+                        target_chat,
+                        caption=caption if caption else None,
+                        caption_entities=msg.caption_entities if caption else None
+                    )
+                    count += 1
+                except FloodWait as e:
+                    await asyncio.sleep(e.value)
+                    continue
+                except RPCError:
+                    failed += 1
+                    continue
             else:
                 failed += 1
-        except FloodWait as e:
-            await asyncio.sleep(e.value)
-            continue
-        except RPCError:
-            failed += 1
-            continue
-
+                
         elapsed = time.time() - start_time
         percent = (count + failed) / total * 100
         eta_seconds = (elapsed / (count + failed)) * (total - count - failed) if (count + failed) else 0
