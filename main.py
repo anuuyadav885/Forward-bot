@@ -373,7 +373,7 @@ async def forward_command(client, message):
 
         eta = format_eta(eta_seconds)
         remaining = total - (count + failed)
-        progress_bar = f"{'█' * int(percent // 5)}{'░' * (20 - int(percent // 5))}"
+        progress_bar = f"{'🟩' * int(percent // 10)}{'⬜' * (10 - int(percent // 10))}"
         elapsed_text = format_eta(int(elapsed))
 
         try:
