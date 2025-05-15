@@ -180,8 +180,8 @@ async def open_main_settings_menu(client, callback_query):
         "⚙️ **Settings Menu**:\nChoose an option to configure the bot.",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("📝 Caption", callback_data="open_caption_settings")],
-            [InlineKeyboardButton("🎛️ Filters", callback_data="open_filter_settings")],
-            [InlineKeyboardButton("♻️ Reset Settings", callback_data="reset_all_settings")],
+            [InlineKeyboardButton("🎛️ Filters", callback_data="open_filters")],
+            [InlineKeyboardButton("♻️ Reset Settings", callback_data="reset_settings")],
             [InlineKeyboardButton("🔙 Back", callback_data="start_back")]
         ])
     )
