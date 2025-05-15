@@ -41,6 +41,8 @@ async def set_bot_commands(client, message):
         BotCommand("clear", "🗑️ Clear all authorized users"),
         BotCommand("users", "👥 List premium users"),
         BotCommand("target", "🎯 Set target channel"),
+        BotCommand("filters", "🔍 Toggle media filters"),
+        BotCommand("cancel", "🛑 Cancel forwarding"),
         BotCommand("targetinfo", "ℹ️ Show current target"),
         BotCommand("forward", "📤 Forward messages"),
         BotCommand("reset", "♻️ Reset filters & target"),
