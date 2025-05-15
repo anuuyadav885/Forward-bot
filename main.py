@@ -290,6 +290,7 @@ async def forward_command(client, message):
                     continue
             else:
                 failed += 1
+                continue
                 
         elapsed = time.time() - start_time
         percent = (count + failed) / total * 100
