@@ -7,6 +7,7 @@ import asyncio
 import tgcrypto
 import requests
 import datetime
+import random
 from pyromod import listen
 from pyrogram import enums 
 from Crypto.Cipher import AES
