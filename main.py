@@ -6,7 +6,7 @@ import pymongo
 import asyncio
 import tgcrypto
 import requests
-from datetime import datetime, timedelta
+import datetime
 from pyromod import listen
 from pyrogram import enums 
 from Crypto.Cipher import AES
@@ -43,19 +43,46 @@ def extract_ids_from_link(link):
     msg_id = int(match.group(3)) if match.group(3) else None
     return chat_id, msg_id
 
+image_list = [
+    "https://www.pixelstalk.net/wp-content/uploads/2025/03/A-breathtaking-image-of-a-lion-roaring-proudly-atop-a-rocky-outcrop-with-dramatic-clouds-and-rays-of-sunlight-breaking-through-2.webp"
+    ]
+class Data:
+    START = (
+        "<blockquote>🌟 𝑾𝑬𝑳𝑪𝑶𝑴𝑬  {0}! 🌟</blockquote>\n\n"
+    )
+# Define the start command handler
 @app.on_message(filters.command("start"))
-async def start_cmd(_, msg: Message):
-    await msg.reply(
-        f"╔═════════════════════════╗"
+async def start(client: Client, msg: Message):
+    user = await client.get_me()
+    mention = user.mention
+    random_image = random.choice(image_list)
+    start_message = await client.send_photo(
+         chat_id=msg.chat.id,
+         photo=random_image,
+         caption=Data.START.format(msg.from_user.mention)
+    )
+    await asyncio.sleep(1)
+    await start_message.edit_text(
+        Data.START.format(msg.from_user.mention) +
+        "Initializing Uploader bot... 🤖\n\n"
+        "Progress: [⬜⬜⬜⬜⬜⬜⬜⬜⬜] 0%\n\n"
+    )
+    await asyncio.sleep(1)
+    await start_message.edit_text(
+        Data.START.format(msg.from_user.mention) +
+        "Checking status Ok... Bot started successfully🔍\n\n"
+        "Progress:[🟩🟩🟩🟩🟩🟩🟩🟩🟩] 100%\n\n"
+    )
+    await asyncio.sleep(1)
+    await start_message.edit_text(
+        Data.START.format(msg.from_user.mention) +
         "<blockquote>👋 𝙒𝙀𝙇𝘾𝙊𝙈𝙀 𝙏𝙊 𝙁𝙊𝙍𝙒𝘼𝙍𝘿 𝘽𝙊𝙏 👋</blockquote>\n\n"
         "📚 *Available Commands:*\n"
         "• /target – Set target via message link\n"
         "• /forward – Forward messages via message links\n"
         "• /cancel – Cancel ongoing forwarding\n\n"
         "🚀 *Use the bot to forward messages fast and easily!* 🌟\n"
-        "╚═════════════════════════╝"
     )
-
 
 @app.on_message(filters.command("target") & filters.private)
 async def set_target(client, message):
@@ -111,7 +138,7 @@ async def forward_command(client, message):
 
     status = await message.reply(
         f"╔═════════════════════════╗"
-        f"<blockquote>𝙁𝙊𝙍𝙒𝘼𝙍𝘿𝙄𝙉𝙂 𝙄𝙉𝙄𝙏𝙄𝘼𝙏𝙀𝘿</blockquote>\n"
+        f"┃          𝙁𝙊𝙍𝙒𝘼𝙍𝘿𝙄𝙉𝙂 𝙄𝙉𝙄𝙏𝙄𝘼𝙏𝙀𝘿\n"
         f"┃ 🗂 Source : `{source_chat.title}`\n"
         f"┃ 📤 Target : `{target.title}`\n"
         f"╚═════════════════════════╝"
@@ -122,7 +149,7 @@ async def forward_command(client, message):
         if cancel_flags.get(user_id):
             await status.edit(
                 f"╔═════════════════════════╗"
-                f"<blockquote>𝙁𝙊𝙍𝙒𝘼𝙍𝘿𝙄𝙉𝙂 𝘾𝘼𝙉𝘾𝙀𝙇𝙇𝙀𝘿</blockquote>\n"
+                f"┃          𝙁𝙊𝙍𝙒𝘼𝙍𝘿𝙄𝙉𝙂 𝘾𝘼𝙉𝘾𝙀𝙇𝙇𝙀𝘿\n"
                 f"┃ 📌 Stopped at Message ID: `{msg_id}`\n"
                 f"┃ 📤 Messages Forwarded: `{count}` out of `{total}`\n"
                 f"╚═════════════════════════╝\n\n"
@@ -167,23 +194,23 @@ async def forward_command(client, message):
         try:
             await status.edit(
                 f"╔═════════════════════════╗"
-                f"<blockquote>🎯 𝙎𝙊𝙐𝙍𝘾𝙀 / 𝙏𝘼𝙍𝙂𝙀𝙏 𝙄𝙉𝙁𝙊 🎯</blockquote>\n"
+                f"┃          🎯 𝙎𝙊𝙐𝙍𝘾𝙀 / 𝙏𝘼𝙍𝙂𝙀𝙏 𝙄𝙉𝙁𝙊 🎯\n"
                 f"┃ 📤 From  : `{source_chat.title}`\n"
                 f"┃ 📥 To  :  `{target.title}`\n"
                 f"╚═════════════════════════╝\n\n"
                 f"╔═════════════════════════╗"
-                f"<blockquote>📦 𝙁𝙊𝙍𝙒𝘼𝙍𝘿𝙄𝙉𝙂 𝙋𝙍𝙊𝙂𝙍𝙀𝙎𝙎 📦</blockquote>\n"
+                f"┃          📦 𝙁𝙊𝙍𝙒𝘼𝙍𝘿𝙄𝙉𝙂 𝙋𝙍𝙊𝙂𝙍𝙀𝙎𝙎 📦\n"
                 f"┃ 📊 Progress  : `{count + failed}/{total}` ({percent:.1f}%)\n"
                 f"┃ 📌 Remaining  : `{remaining}`\n"
                 f"┃ ▓ {progress_bar}\n"
                 f"╚═════════════════════════╝\n\n"
                 f"╔═════════════════════════╗"
-                f"<blockquote>📈 𝙋𝙀𝙍𝙁𝙊𝙍𝙈𝘼𝙉𝘾𝙀 𝙈𝙀𝙏𝙍𝙄𝘾𝙎 📈</blockquote>\n"
+                f"┃          📈 𝙋𝙀𝙍𝙁𝙊𝙍𝙈𝘼𝙉𝘾𝙀 𝙈𝙀𝙏𝙍𝙄𝘾𝙎 📈\n"
                 f"┃ ✅ Success  : `{count}`\n"
                 f"┃ ❌ Deleted  :  `{failed}`\n"
                 f"╚═════════════════════════╝\n\n"
                 f"╔═════════════════════════╗"
-                f"<blockquote>⏱️ 𝙏𝙄𝙈𝙄𝙉𝙂 𝘿𝙀𝙏𝘼𝙄𝙇𝙎 ⏱️</blockquote>\n"
+                f"┃          ⏱️ 𝙏𝙄𝙈𝙄𝙉𝙂 𝘿𝙀𝙏𝘼𝙄𝙇𝙎 ⏱️\n"
                 f"┃ ⌛ Elapsed  : `{int(elapsed)}s`\n"
                 f"┃ ⏳ ETA  :  `{eta}`\n"
                 f"╚═════════════════════════╝\n\n"
@@ -196,7 +223,7 @@ async def forward_command(client, message):
     time_taken = format_eta(time.time() - start_time)
     await status.edit(
         f"╔═════════════════════════╗"
-        f"<blockquote>✅ 𝙁𝙊𝙍𝙒𝘼𝙍𝘿𝙄𝙉𝙂 𝘾𝙊𝙈𝙋𝙇𝙀𝙏𝙀 ✅</blockquote>\n"
+        f"┃          ✅ 𝙁𝙊𝙍𝙒𝘼𝙍𝘿𝙄𝙉𝙂 𝘾𝙊𝙈𝙋𝙇𝙀𝙏𝙀 ✅\n"
         f"┃ 📤 From  : `{source_chat.title}`\n"
         f"┃ 🎯 To  : `{target.title}`\n"
         f"┃ ✅ Success  : `{count}`\n"
@@ -211,7 +238,7 @@ async def cancel_forwarding(client, message):
     cancel_flags[message.from_user.id] = True
     await message.reply(
         f"╔═════════════════════════╗"
-        f"<blockquote>🛑 𝘾𝘼𝙉𝘾𝙀𝙇 𝙍𝙀𝙌𝙐𝙀𝙎𝙏𝙀𝘿 🛑</blockquote>\n"
+        f"┃          🛑 𝘾𝘼𝙉𝘾𝙀𝙇 𝙍𝙀𝙌𝙐𝙀𝙎𝙏𝙀𝘿 🛑\n"
         f"┃ ⚙️ Attempting to halt forwarding...\n"
         f"┃ ⏳ Please wait a moment.\n"
         f"╚═════════════════════════╝"
