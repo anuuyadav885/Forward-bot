@@ -263,34 +263,16 @@ async def forward_command(client, message):
         try:
             msg = await client.get_messages(start_chat, msg_id)
             if msg and not getattr(msg, "empty", False) and not getattr(msg, "protected_content", False):
-                try:
-                    caption = msg.caption
-                    user_data = users.find_one({"user_id": user_id})
-                    filters_data = user_data.get("filters", {})
-                    
-                    if caption:
-                        for old, new in filters_data.get("replace", {}).items():
-                            caption = caption.replace(old, new)
-                        for word in filters_data.get("delete", []):
-                            caption = caption.replace(word, "")
-                        if filters_data.get("remove_links", False):
-                            caption = re.sub(r'https?://\S+', '', caption)
-                            caption = re.sub(r'@\w+', '', caption)  # Remove usernames
-                    await msg.copy(
-                        target_chat,
-                        caption=caption if caption else None,
-                        caption_entities=msg.caption_entities if caption else None
-                    )
-                    count += 1
-                except FloodWait as e:
-                    await asyncio.sleep(e.value)
-                    continue
-                except RPCError:
-                    failed += 1
-                    continue
+                await msg.copy(target_chat)
+                count += 1
             else:
                 failed += 1
-                continue
+        except FloodWait as e:
+            await asyncio.sleep(e.value)
+            continue
+        except RPCError:
+            failed += 1
+            continue
                 
         elapsed = time.time() - start_time
         percent = (count + failed) / total * 100
