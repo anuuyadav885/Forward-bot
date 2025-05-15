@@ -44,6 +44,7 @@ async def settings_handler(client, message):
 
 @app.on_callback_query()
 async def handle_callbacks(client, callback_query):
+    await callback_query.answer() 
     user_id = callback_query.from_user.id
     data = callback_query.data
 
@@ -86,6 +87,18 @@ async def handle_callbacks(client, callback_query):
 
     elif data == "back_to_start":
         await start(client, callback_query.message)
+
+@app.on_message(filters.command("test"))
+async def test_btn(client, message):
+    await message.reply("Click:",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Try Me", callback_data="test_btn")]
+        ])
+    )
+
+@app.on_callback_query(filters.regex("test_btn"))
+async def on_test(client, callback_query):
+    await callback_query.answer("✅ It works!")
 
 
 # Utility to extract chat_id and message_id from a message link
