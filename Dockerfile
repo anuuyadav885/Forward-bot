@@ -1,5 +1,5 @@
-# Use official Python image
-FROM python:3.10-slim
+# Use a Python 3.9.6 Alpine base image
+FROM python:3.9.6-alpine3.14
 
 # Set workdir
 WORKDIR /app
