@@ -7,7 +7,7 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from pymongo import MongoClient
 from pyrogram.errors import FloodWait, PeerIdInvalid, RPCError
-from pyromod import listen
+from pyromod.listen import listen
 from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI
 
 # Initialize bot and MongoDB
