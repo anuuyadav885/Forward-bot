@@ -1,18 +1,29 @@
-import os
-import re
+import re    
+import os 
+import sys
+import time      
+import pymongo
 import asyncio
-import logging
-import time
-from pyrogram import Client, filters
-from pyrogram.types import Message
+import tgcrypto
+import requests
+from logger import logging
+from pyromod import listen
+from pyrogram import enums 
+from Crypto.Cipher import AES
 from pymongo import MongoClient
+from aiohttp import ClientSession    
+from pyrogram.types import Message   
+from pyrogram import Client, filters
+from base64 import b64encode, b64decode
 from pyrogram.errors import FloodWait, PeerIdInvalid, RPCError
-from pyromod.listen import listen
+from pyrogram.types import User, Message        
+from pyrogram.types.messages_and_media import message
 from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.errors.exceptions.bad_request_400 import StickerEmojiInvalid
 
 # Initialize bot and MongoDB
 app = Client("forward_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
-app = listen(app)
 mongo = MongoClient(MONGO_URI)
 db = mongo["forward_bot"]
 users = db["users"]
@@ -32,20 +43,11 @@ def extract_ids_from_link(link):
     msg_id = int(match.group(3)) if match.group(3) else None
     return chat_id, msg_id
 
-@app.on_message(filters.command("test") & filters.private)
-async def test_cmd(client, message):
-    await message.reply("Send me any text message now:")
-    try:
-        reply = await client.listen(message.chat.id, filters=filters.text, timeout=60)
-        await message.reply(f"You sent: {reply.text}")
-    except Exception as e:
-        await message.reply(f"Error or timeout: {e}")
-
 @app.on_message(filters.command("start"))
 async def start_cmd(_, msg: Message):
     await msg.reply(
         """
-👋 **Welcome to Advanced Telegram Forward Bot!**
+<blockquote>👋 Welcome to Advanced Telegram Forward Bot!</blockquote>
 
 Use:
 /settarget – set target via message link
@@ -58,7 +60,7 @@ Use:
 async def set_target(client, message):
     await message.reply("📩 Send a **message link** from the **target channel**:")
     try:
-        link_msg = await client.listen(message.chat.id, timeout=60)
+        link_msg = await client.listen(message.chat.id, timeout=120)
         link = link_msg.text.strip()
         chat_id, _ = extract_ids_from_link(link)
         if not chat_id:
@@ -81,13 +83,13 @@ async def forward_command(client, message):
 
     await message.reply("📩 Send the **start message link** from the source channel:")
     try:
-        start_msg = await client.listen(message.chat.id, timeout=60)
+        start_msg = await client.listen(message.chat.id, timeout=120)
         start_chat, start_id = extract_ids_from_link(start_msg.text.strip())
         if not start_chat or not start_id:
             return await message.reply("❌ Invalid start message link.")
 
         await message.reply("📩 Send the **end message link**:")
-        end_msg = await client.listen(message.chat.id, timeout=60)
+        end_msg = await client.listen(message.chat.id, timeout=120)
         _, end_id = extract_ids_from_link(end_msg.text.strip())
         if not end_id:
             return await message.reply("❌ Invalid end message link.")
