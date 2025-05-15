@@ -34,7 +34,7 @@ cancel_flags = {}
 def is_authorized(user_id):
     return auth_col.find_one({"_id": user_id}) or user_id == OWNER_ID
 
-@bot.on_message(filters.command("add") & filters.user(OWNER_ID))
+@app.on_message(filters.command("add") & filters.user(OWNER_ID))
 async def add_user(_, m):
     if len(m.command) < 2:
         return await m.reply("⚠️ Usage: /add <user_id>")
@@ -48,7 +48,7 @@ async def add_user(_, m):
     except:
         await m.reply("❌ Invalid ID format.")
 
-@bot.on_message(filters.command("rem") & filters.user(OWNER_ID))
+@app.on_message(filters.command("rem") & filters.user(OWNER_ID))
 async def remove_user(_, m):
     if len(m.command) < 2:
         return await m.reply("⚠️ Usage: /rem <user_id>")
@@ -59,12 +59,12 @@ async def remove_user(_, m):
     except:
         await m.reply("❌ Invalid ID format.")
         
-@bot.on_message(filters.command("clear") & filters.user(OWNER_ID))
+@app.on_message(filters.command("clear") & filters.user(OWNER_ID))
 async def clear_all_users(_, m):
     result = auth_col.delete_many({})
     await m.reply(f"✅ All users deleted.\nTotal removed: {result.deleted_count}")
 
-@bot.on_message(filters.command("users") & filters.user(OWNER_ID))
+@app.on_message(filters.command("users") & filters.user(OWNER_ID))
 async def show_users(_, m):
     users = list(auth_col.find())
     if not users:
