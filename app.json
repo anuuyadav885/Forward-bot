@@ -1,0 +1,29 @@
+{
+  "name": "Telegram Forward Bot",
+  "description": "A powerful Telegram forward bot with advanced settings.",
+  "repository": "https://github.com/jairamjiki/Forward-bot",
+  "logo": "https://telegram.org/img/t_logo.png",
+  "keywords": ["telegram", "forward", "bot", "pyrogram"],
+  "env": {
+    "API_ID": {
+      "description": "Get this from https://my.telegram.org"
+    },
+    "API_HASH": {
+      "description": "Get this from https://my.telegram.org"
+    },
+    "BOT_TOKEN": {
+      "description": "Bot token from @BotFather"
+    },
+    "MONGO_URL": {
+      "description": "Your MongoDB URI"
+    },
+    "OWNER_ID": {
+      "description": "Your Telegram numeric user ID"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}
