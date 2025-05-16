@@ -110,7 +110,7 @@ image_list = [
     ]
 class Data:
     START = (
-        "<blockquote>𝑾𝑬𝑳𝑪𝑶𝑴𝑬 !  {0}</blockquote>\n\n"
+        "🌟 𝐇𝐞𝐲 {0}, 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 !\n\n"
     )
 # Define the start command handler
 @app.on_message(filters.command("start"))
@@ -160,10 +160,10 @@ async def start(client: Client, msg: Message):
            Data.START.format(msg.from_user.mention) +
             f"<blockquote>🛡️ Access Restricted</blockquote>\n\n"
             "This bot is restricted to premium users only.\n\n"
-            "<blockquote>🔐 Features include:\n\n</blockquote>"
+            "<blockquote>🔐 Features include:</blockquote>\n\n"
             "• Auto messages forwarding\n"
             "• Auto caption editing\n"
-            "• Filters\n\n"
+            "• Auto Pining\n\n"
             "<blockquote>To request access, contact the admin below.</blockquote>",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("📞 Contact Admin", url="https://t.me/Dc5txt_bot")]
