@@ -187,7 +187,7 @@ async def set_filters(client, message):
     auto_pin = filters_data.get("auto_pin", False)
 
     await message.reply(
-        "**🔧 Current Filters:**\n"
+        "<blockquote>**🔧 Current Filters :**</blockquote>\n\n"
         f"🔁 Replace: `{replace}`\n"
         f"❌ Delete: `{delete}`\n"
         f"📌 Auto Pin: `{auto_pin}`\n\n"
@@ -276,7 +276,7 @@ async def set_target(client, message):
         if not chat_id:
             return await message.reply("<blockquote>❌ Invalid link</blockquote>")
         users.update_one({"user_id": message.from_user.id}, {"$set": {"target_chat": chat_id}}, upsert=True)
-        await message.reply(f"✅ Target set to `{chat_id}`")
+        await message.reply(f"<blockquote>✅ Target set to `{chat_id}`</blockquote>")
     except asyncio.TimeoutError:
         await message.reply("<blockquote>⏰ Timed out. Please try again</blockquote>")
         
