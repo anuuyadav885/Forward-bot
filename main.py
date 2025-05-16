@@ -164,7 +164,7 @@ async def set_filters(client, message):
     filters_data = user.get("filters", {})
     replace = filters_data.get("replace", {})
     delete = filters_data.get("delete", [])
-    auto_pin = user.get("auto_pin", False)
+    auto_pin = filters_data.get("auto_pin", False)
 
     await message.reply(
         "**🔧 Current Filters:**\n"
@@ -351,6 +351,7 @@ async def forward_command(client, message):
                 caption = msg.caption
                 user_data = users.find_one({"user_id": user_id})
                 filters_data = user_data.get("filters", {})
+                auto_pin = filters_data.get("auto_pin", False)
 
                 if caption:
                     for old, new in filters_data.get("replace", {}).items():
