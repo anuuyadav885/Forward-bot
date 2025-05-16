@@ -143,8 +143,8 @@ async def start(client: Client, msg: Message):
             "<blockquote>👋 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐓𝐎 𝐅𝐎𝐑𝐖𝐀𝐑𝐃 𝐁𝐎𝐓 👋</blockquote>\n\n"
             "Great! You are a premium member!\n\n"
             "<blockquote>📚 **Available Commands For This Bot**</blockquote>\n\n"
-            "• /target – Set target via message link\n"
-            "• /forward – Forward messages via message links\n"
+            "• /target – Set target via message link\n\n"
+            "• /forward – Forward messages\n\n"
             "• /cancel – Cancel ongoing forwarding\n\n"
             "• /filters – Edit caption in forwarding\n\n"
             "• /reset – Reset settings\n\n"
@@ -160,11 +160,11 @@ async def start(client: Client, msg: Message):
            Data.START.format(msg.from_user.mention) +
             f"<blockquote>🛡️ Access Restricted</blockquote>\n\n"
             "This bot is restricted to premium users only.\n\n"
-            "🔐 Features include:\n"
+            "<blockquote>🔐 Features include:\n\n</blockquote>"
             "• Auto messages forwarding\n"
             "• Auto caption editing\n"
             "• Filters\n\n"
-            "To request access, contact the admin below.",
+            "<blockquote>To request access, contact the admin below.</blockquote>",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("📞 Contact Admin", url="https://t.me/Dc5txt_bot")]
             ])
