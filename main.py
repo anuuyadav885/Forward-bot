@@ -49,7 +49,7 @@ async def set_bot_commands(client, message):
     ]
 
     await client.set_bot_commands(commands)
-    await message.reply("✅ Bot commands set successfully with emojis and proper order.")
+    await message.reply("<blockquote>✅ Bot commands set successfully.</blockquote>")
 
 def is_authorized(user_id):
     return auth_col.find_one({"_id": user_id}) or user_id == OWNER_ID
@@ -62,11 +62,11 @@ async def add_user(_, m):
         uid = int(m.command[1])
         if not auth_col.find_one({"_id": uid}):
             auth_col.insert_one({"_id": uid})
-            await m.reply("✅ User added.")
+            await m.reply("<blockquote>✅ User Added Successsfully.</blockquote>")
         else:
-            await m.reply("ℹ️ User already exists.")
+            await m.reply("<blockquote>ℹ️ User Already Exists.</blockquote>")
     except:
-        await m.reply("❌ Invalid ID format.")
+        await m.reply("<blockquote>❌ Invalid ID format.</blockquote>")
 
 @app.on_message(filters.command("rem") & filters.user(OWNER_ID))
 async def remove_user(_, m):
@@ -75,22 +75,22 @@ async def remove_user(_, m):
     try:
         uid = int(m.command[1])
         result = auth_col.delete_one({"_id": uid})
-        await m.reply("✅ User removed." if result.deleted_count else "❌ User not found.")
+        await m.reply("<blockquote>✅ User Removed Successfully.</blockquote>" if result.deleted_count else "<blockquote>❌ User not found.</blockquote>")
     except:
         await m.reply("❌ Invalid ID format.")
         
 @app.on_message(filters.command("clear") & filters.user(OWNER_ID))
 async def clear_all_users(_, m):
     result = auth_col.delete_many({})
-    await m.reply(f"✅ All users deleted.\nTotal removed: {result.deleted_count}")
+    await m.reply(f"<blockquote>✅ All users deleted.\nTotal removed: {result.deleted_count}</blockquote>")
 
 @app.on_message(filters.command("users") & filters.user(OWNER_ID))
 async def show_users(_, m):
     users = list(auth_col.find())
     if not users:
-        return await m.reply("🚫 No authorized users.")
+        return await m.reply("<blockquote>🚫 No authorized users found.</blockquote>")
     user_list = "\n".join(str(u["_id"]) for u in users)
-    await m.reply(f"👥 Authorized Users:\n\n{user_list}")
+    await m.reply(f"<blockquote>👥 Authorized Users:</blockquote>\n\n{user_list}")
 
 # Utility to extract chat_id and message_id from a message link
 def extract_ids_from_link(link):
@@ -126,7 +126,7 @@ async def start(client: Client, msg: Message):
     await asyncio.sleep(1)
     await start_message.edit_text(
         Data.START.format(msg.from_user.mention) +
-        "Initializing Uploader bot... 🤖\n\n"
+        "Initializing Auto Forward Bot... 🤖\n\n"
         "Progress: [⬜⬜⬜⬜⬜⬜⬜⬜⬜] 0%\n\n"
     )
     await asyncio.sleep(1)
@@ -136,22 +136,46 @@ async def start(client: Client, msg: Message):
         "Progress:[🟩🟩🟩🟩🟩🟩🟩🟩🟩] 100%\n\n"
     )
     await asyncio.sleep(1)
-    await start_message.edit_text(
-        Data.START.format(msg.from_user.mention) +
-        "<blockquote>👋 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐓𝐎 𝐅𝐎𝐑𝐖𝐀𝐑𝐃 𝐁𝐎𝐓 👋</blockquote>\n\n"
-        "📚 **Available Commands  :**\n\n"
-        "• /target – Set target via message link\n"
-        "• /forward – Forward messages via message links\n"
-        "• /cancel – Cancel ongoing forwarding\n\n"
-        "• /filters – Edit caption in forwarding\n\n"
-        "• /reset – Reset settings\n\n"
-        "• /targetinfo –Information about target\n\n"
-        "🚀 *Use the bot to forward messages fast and easily!* 🌟\n"
-    )
+    user_id = msg.from_user.id
+    if is_authorized(user_id):
+        await start_message.edit_text(
+            Data.START.format(msg.from_user.mention) +
+            "<blockquote>👋 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐓𝐎 𝐅𝐎𝐑𝐖𝐀𝐑𝐃 𝐁𝐎𝐓 👋</blockquote>\n\n"
+            "Great! You are a premium member!\n\n"
+            "<blockquote>📚 **Available Commands For This Bot**</blockquote>\n\n"
+            "• /target – Set target via message link\n"
+            "• /forward – Forward messages via message links\n"
+            "• /cancel – Cancel ongoing forwarding\n\n"
+            "• /filters – Edit caption in forwarding\n\n"
+            "• /reset – Reset settings\n\n"
+            "• /targetinfo –Information about target\n\n"
+            "<blockquote>🚀 **Use the bot to forward messages fast and easily!**</blockquote>\n",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("📞 Contact Admin", url="https://t.me/Dc5txt_bot")]
+            ])
+        )
+    else:
+        await asyncio.sleep(2)
+        await start_message.edit_text(
+           Data.START.format(msg.from_user.mention) +
+            f"<blockquote>🛡️ Access Restricted</blockquote>\n\n"
+            "This bot is restricted to premium users only.\n\n"
+            "🔐 Features include:\n"
+            "• Auto messages forwarding\n"
+            "• Auto caption editing\n"
+            "• Filters\n\n"
+            "To request access, contact the admin below.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("📞 Contact Admin", url="https://t.me/Dc5txt_bot")]
+            ])
+        )
+        
 @app.on_message(filters.command("filters") & filters.private)
 async def set_filters(client, message):
     user_id = message.from_user.id
-
+    if not is_authorized(user_id):
+        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
+        return
     # Ensure fields exist
     users.update_one({"user_id": user_id}, {
         "$setOnInsert": {
@@ -218,7 +242,9 @@ async def set_filters(client, message):
 @app.on_message(filters.command("reset") & filters.private)
 async def reset_selected_settings(client, message):
     user_id = message.from_user.id
-
+    if not is_authorized(user_id):
+        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
+        return
     users.update_one(
         {"user_id": user_id},
         {
@@ -244,7 +270,7 @@ async def reset_selected_settings(client, message):
 async def set_target(client, message):
     user_id = message.from_user.id
     if not is_authorized(user_id):
-        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
+        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
         return
     await message.reply("<blockquote>📩 Send a **message link** from the **target channel**</blockquote>")
     try:
@@ -261,18 +287,21 @@ async def set_target(client, message):
 @app.on_message(filters.command("targetinfo") & filters.private)
 async def target_info(client, message):
     user_id = message.from_user.id
+    if not is_authorized(user_id):
+        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
+        return
     user = users.find_one({"user_id": user_id})
     target_chat_id = user.get("target_chat") if user else None
 
     if not target_chat_id:
-        return await message.reply("❌ No target is currently set.")
+        return await message.reply("<blockquote>❌ No target is currently set. Use /target to set one.</blockquote>")
 
     try:
         chat = await client.get_chat(target_chat_id)
         await message.reply(
-            f"🎯 Current Target:\n\n"
-            f"• Title: <b>{chat.title}</b>\n"
-            f"• ID: <code>{target_chat_id}</code>"
+            f"<blockquote>🎯 Current Target :</blockquote>\n\n"
+            f"• Title : <b>{chat.title}</b>\n"
+            f"• ID : <code>{target_chat_id}</code>"
         )
     except Exception:
         await message.reply(
@@ -280,12 +309,11 @@ async def target_info(client, message):
             f"(⚠️ Bot may not have access to retrieve the title)"
         )
 
-
 @app.on_message(filters.command("forward") & filters.private)
 async def forward_command(client, message):
     user_id = message.from_user.id
     if not is_authorized(user_id):
-        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
+        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
         return
     cancel_flags[user_id] = False
 
@@ -446,7 +474,7 @@ async def forward_command(client, message):
 async def cancel_forwarding(client, message):
     user_id = message.from_user.id
     if not is_authorized(user_id):
-        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
+        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
         return
     cancel_flags[message.from_user.id] = True
     await message.reply(
