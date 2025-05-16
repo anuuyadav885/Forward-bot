@@ -23,6 +23,7 @@ from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI, OWNER_ID
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from pyrogram.errors.exceptions.bad_request_400 import StickerEmojiInvalid
 
+#========================= Initaited bot ===========================
 # Initialize bot and MongoDB
 app = Client("forward_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 mongo = MongoClient(MONGO_URI)
@@ -31,7 +32,7 @@ users = db["users"]
 auth_col = db["auth_users"]
 cancel_flags = {}
 
-
+#======================= Set bot commands ========================
 @app.on_message(filters.command("set") & filters.user(OWNER_ID))
 async def set_bot_commands(client, message):
     commands = [
@@ -51,13 +52,15 @@ async def set_bot_commands(client, message):
     await client.set_bot_commands(commands)
     await message.reply("<blockquote>✅ Bot commands set successfully.</blockquote>")
 
+#======================= Check premium users ====================
 def is_authorized(user_id):
     return auth_col.find_one({"_id": user_id}) or user_id == OWNER_ID
 
+#======================== Add user in premium =======================
 @app.on_message(filters.command("add") & filters.user(OWNER_ID))
 async def add_user(_, m):
     if len(m.command) < 2:
-        return await m.reply("⚠️ Usage: /add <user_id>")
+        return await m.reply("<blockquote>⚠️ Usage: /add [user_id]</blockquote>")
     try:
         uid = int(m.command[1])
         if not auth_col.find_one({"_id": uid}):
@@ -68,22 +71,25 @@ async def add_user(_, m):
     except:
         await m.reply("<blockquote>❌ Invalid ID format.</blockquote>")
 
+#====================== Remove users from premium =========================
 @app.on_message(filters.command("rem") & filters.user(OWNER_ID))
 async def remove_user(_, m):
     if len(m.command) < 2:
-        return await m.reply("⚠️ Usage: /rem <user_id>")
+        return await m.reply("<blockquote>⚠️ Usage: /rem [user_id]</blockquote>")
     try:
         uid = int(m.command[1])
         result = auth_col.delete_one({"_id": uid})
         await m.reply("<blockquote>✅ User Removed Successfully.</blockquote>" if result.deleted_count else "<blockquote>❌ User not found.</blockquote>")
     except:
-        await m.reply("❌ Invalid ID format.")
-        
+        await m.reply("<blockquote>❌ Invalid ID format.</blockquote>")
+
+#===================== Clear all Premium users =========================
 @app.on_message(filters.command("clear") & filters.user(OWNER_ID))
 async def clear_all_users(_, m):
     result = auth_col.delete_many({})
     await m.reply(f"<blockquote>✅ All users deleted.\nTotal removed: {result.deleted_count}</blockquote>")
 
+#======================== Premium users info =====================
 @app.on_message(filters.command("users") & filters.user(OWNER_ID))
 async def show_users(_, m):
     users = list(auth_col.find())
@@ -92,6 +98,7 @@ async def show_users(_, m):
     user_list = "\n".join(str(u["_id"]) for u in users)
     await m.reply(f"<blockquote>👥 Authorized Users:</blockquote>\n\n{user_list}")
 
+#===================== Detect chat id from message link ===================
 # Utility to extract chat_id and message_id from a message link
 def extract_ids_from_link(link):
     match = re.search(r"https://t.me/(c/)?([\w_]+)/?(\d+)?", link)
@@ -105,12 +112,13 @@ def extract_ids_from_link(link):
     msg_id = int(match.group(3)) if match.group(3) else None
     return chat_id, msg_id
 
+#================================ Start command to start bot ============================
 image_list = [
     "https://www.pixelstalk.net/wp-content/uploads/2025/03/A-breathtaking-image-of-a-lion-roaring-proudly-atop-a-rocky-outcrop-with-dramatic-clouds-and-rays-of-sunlight-breaking-through-2.webp"
     ]
 class Data:
     START = (
-        "🌟 𝐇𝐞𝐲 {0}, 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 !\n\n"
+        "🌟 𝐇𝐞𝐲  {0} , 𝐖𝐄𝐋𝐂𝐎𝐌𝐄  !\n\n"
     )
 # Define the start command handler
 @app.on_message(filters.command("start"))
@@ -122,18 +130,6 @@ async def start(client: Client, msg: Message):
          chat_id=msg.chat.id,
          photo=random_image,
          caption=Data.START.format(msg.from_user.mention)
-    )
-    await asyncio.sleep(1)
-    await start_message.edit_text(
-        Data.START.format(msg.from_user.mention) +
-        "Initializing Auto Forward Bot... 🤖\n\n"
-        "Progress: [⬜⬜⬜⬜⬜⬜⬜⬜⬜] 0%\n\n"
-    )
-    await asyncio.sleep(1)
-    await start_message.edit_text(
-        Data.START.format(msg.from_user.mention) +
-        "Checking status Ok... Bot started successfully🔍\n\n"
-        "Progress:[🟩🟩🟩🟩🟩🟩🟩🟩🟩] 100%\n\n"
     )
     await asyncio.sleep(1)
     user_id = msg.from_user.id
@@ -169,17 +165,17 @@ async def start(client: Client, msg: Message):
                 [InlineKeyboardButton("📞 Contact Admin", url="https://t.me/Dc5txt_bot")]
             ])
         )
-        
+#================================ Set filters =============================
 @app.on_message(filters.command("filters") & filters.private)
 async def set_filters(client, message):
     user_id = message.from_user.id
     if not is_authorized(user_id):
         await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
         return
-    # Ensure fields exist with default filters including remove_links
+    # Ensure fields exist
     users.update_one({"user_id": user_id}, {
         "$setOnInsert": {
-            "filters": {"replace": {}, "delete": [], "remove_links": False},
+            "filters": {"replace": {}, "delete": []},
             "auto_pin": False
         }
     }, upsert=True)
@@ -188,19 +184,16 @@ async def set_filters(client, message):
     filters_data = user.get("filters", {})
     replace = filters_data.get("replace", {})
     delete = filters_data.get("delete", [])
-    remove_links = filters_data.get("remove_links", False)
     auto_pin = filters_data.get("auto_pin", False)
 
     await message.reply(
-        "<blockquote>**🔧 Current Filters :**</blockquote>\n\n"
+        "**🔧 Current Filters:**\n"
         f"🔁 Replace: `{replace}`\n"
         f"❌ Delete: `{delete}`\n"
-        f"🔗 Remove Links: `{remove_links}`\n"
         f"📌 Auto Pin: `{auto_pin}`\n\n"
         "**Send filters in one of these formats:**\n"
         "`word1 => word2` to replace\n"
         "`delete: word` to delete word\n"
-        "`remove_links: true/false` to toggle removing links\n"
         "`auto_pin: true/false` to toggle auto pinning\n\n"
         "Type /done to finish."
     )
@@ -214,7 +207,7 @@ async def set_filters(client, message):
         text = response.text.strip()
 
         if text.lower() == "/done":
-            return await message.reply("<blockquote>✅ Filters updated!</blockquote>")
+            return await message.reply("<blockquote>✅ Filters updated !</blockquote>")
 
         if "=>" in text:
             try:
@@ -238,48 +231,37 @@ async def set_filters(client, message):
             users.update_one({"user_id": user_id}, {"$set": {"filters.auto_pin": val}})
             await message.reply(f"📌 Auto pin set to: `{val}`")
 
-        elif text.lower().startswith("remove_links:"):
-            val_raw = text.split("remove_links:", 1)[1].strip().lower()
-            val = val_raw in ["true", "yes", "1"]
-            users.update_one({"user_id": user_id}, {"$set": {"filters.remove_links": val}})
-            await message.reply(f"🔗 Remove links set to: `{val}`")
-
         else:
             await message.reply("<blockquote>❌ Invalid format. Try again or type /done to finish.</blockquote>")
 
+#============================= Reset filters ====================================
 @app.on_message(filters.command("reset") & filters.private)
 async def reset_selected_settings(client, message):
     user_id = message.from_user.id
     if not is_authorized(user_id):
-        await message.reply(
-            "❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n"
-            "💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !"
-        )
+        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
         return
-
     users.update_one(
         {"user_id": user_id},
         {
-            "$unset": {
-                "target_chat": "",
-                "filters.replace": "",
-                "filters.delete": "",
-                "filters.remove_links": "",
-                "auto_pin": ""
+            "$set": {
+                "target_chat": None,
+                "filters.replace": {},
+                "filters.delete": [],
+                "auto_pin": False
             }
         },
         upsert=True
     )
 
     await message.reply(
-        "<blockquote>♻️ Settings Reset Successfully:</blockquote>\n\n"
-        "• 🎯 Target Channel: <code>Cleared</code>\n"
-        "• 🔁 Replace Words: <code>Cleared</code>\n"
-        "• ❌ Delete Words: <code>Cleared</code>\n"
-        "• 🔗 Remove Links: <code>Cleared</code>\n"
-        "• 📌 Auto Pin: <code>Disabled</code>"
+        "<blockquote>♻️ <b>Settings Reset Successfully:</b></blockquote>\n\n"
+        "• 🎯 Target Channel  :  Cleared\n"
+        "• 🔁 Replace Words  :  Cleared\n"
+        "• ❌ Delete Words  :  Cleared\n"
+        "• 📌 Auto Pin  :  Disabled"
     )
-
+#=============================== Set target chat ==================================
 @app.on_message(filters.command("target") & filters.private)
 async def set_target(client, message):
     user_id = message.from_user.id
@@ -297,7 +279,8 @@ async def set_target(client, message):
         await message.reply(f"✅ Target set to `{chat_id}`")
     except asyncio.TimeoutError:
         await message.reply("<blockquote>⏰ Timed out. Please try again</blockquote>")
-
+        
+#================================ Information of target chat =========================
 @app.on_message(filters.command("targetinfo") & filters.private)
 async def target_info(client, message):
     user_id = message.from_user.id
@@ -319,15 +302,10 @@ async def target_info(client, message):
         )
     except Exception:
         await message.reply(
-            f"🎯 Current Target ID: <code>{target_chat_id}</code>\n\n"
+            f"🎯 Current Target ID : <code>{target_chat_id}</code>\n\n"
             f"(⚠️ Bot may not have access to retrieve the title)"
         )
-        
-link_pattern = re.compile(
-    r"(https?://\S+|www\.\S+|t\.me/\S+|\S+\.(com|net|org|in|xyz|link|live|store|info)\S*|@\w+)",
-    re.IGNORECASE
-)
-
+#========================= Start forward ==============================
 @app.on_message(filters.command("forward") & filters.private)
 async def forward_command(client, message):
     user_id = message.from_user.id
@@ -393,11 +371,9 @@ async def forward_command(client, message):
             msg = await client.get_messages(start_chat, msg_id)
             if msg and not getattr(msg, "empty", False) and not getattr(msg, "protected_content", False):
                 caption = msg.caption
-                caption_entities = msg.caption_entities if caption else None
                 user_data = users.find_one({"user_id": user_id})
                 filters_data = user_data.get("filters", {})
                 auto_pin = filters_data.get("auto_pin", False)
-                remove_links = filters_data.get("remove_links", False)
 
                 if caption:
                     for old, new in filters_data.get("replace", {}).items():
@@ -405,15 +381,6 @@ async def forward_command(client, message):
 
                     for word in filters_data.get("delete", []):
                         caption = caption.replace(word, "")
-                    
-                    # Remove links and mentions
-                    if remove_links:
-                        caption = link_pattern.sub("", caption).strip()
-                        if caption_entities:
-                            caption_entities = [
-                                ent for ent in caption_entities
-                                if ent.type not in ["url", "text_link", "mention"]
-                            ]
 
                 copied = await msg.copy(
                     target_chat,
@@ -502,7 +469,7 @@ async def forward_command(client, message):
         f"┃ ⏱️ Time  : `{time_taken}`\n"
         f"╚══════════════════════════╝"
     )
-
+#================ Cancel running process ======================
 @app.on_message(filters.command("cancel") & filters.private)
 async def cancel_forwarding(client, message):
     user_id = message.from_user.id
@@ -517,5 +484,5 @@ async def cancel_forwarding(client, message):
         f"┃ ⏳ Please wait a moment.\n"
         f"╚═════════════════════════╝"
     )
-
+#========= Start bot =============
 app.run()
