@@ -7,7 +7,7 @@ A Telegram bot to forward messages between chats/groups/channels with filters, a
 ## 🚀 Deploy
 
 ### 🟣 Deploy to Koyeb (Docker)
-[![Deploy on Koyeb](https://www.koyeb.com/static/button/deploy.svg)](https://app.koyeb.com/deploy?type=docker&gitprovider=github&repository=jairamjiki/Forward-bot&branch=main)
+[![Deploy on Koyeb](https://www.koyeb.com/static/images/button/deploy.svg)](https://app.koyeb.com/deploy?type=docker&gitprovider=github&repository=jairamjiki/Forward-bot&branch=main)
 
 > Make sure to add environment variables after clicking the button.
 
