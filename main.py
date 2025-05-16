@@ -212,7 +212,7 @@ async def set_filters(client, message):
             await message.reply(f"📌 Auto pin set to: `{val}`")
 
         else:
-            await message.reply("❌ Invalid format. Try again or type `/done` to finish.")
+            await message.reply("❌ Invalid format. Try again or type /done to finish.")
 
 
 @app.on_message(filters.command("reset") & filters.private)
@@ -226,7 +226,6 @@ async def reset_selected_settings(client, message):
                 "target_chat": None,
                 "filters.replace": {},
                 "filters.delete": [],
-                "filters.remove_links": False,
                 "auto_pin": False
             }
         },
@@ -234,11 +233,10 @@ async def reset_selected_settings(client, message):
     )
 
     await message.reply(
-        "♻️ <b>Settings Reset Successfully:</b>\n\n"
+        "<blockquote>♻️ <b>Settings Reset Successfully:</b></blockquote>\n\n"
         "• 🎯 Target Channel: <code>Cleared</code>\n"
         "• 🔁 Replace Words: <code>Cleared</code>\n"
         "• ❌ Delete Words: <code>Cleared</code>\n"
-        "• 🔗 Remove Links: <code>Disabled</code>\n"
         "• 📌 Auto Pin: <code>Disabled</code>"
     )
 
@@ -292,10 +290,9 @@ async def forward_command(client, message):
     cancel_flags[user_id] = False
 
     user = users.find_one({"user_id": user_id})
-    if not user or "target_chat" not in user:
-        return await message.reply("<blockquote>❗ Please set target first using /settarget</blockquote>")
-
-    target_chat = user["target_chat"]
+    target_chat = user.get("target_chat") if user else None
+    if not target_chat:
+        return await message.reply("<blockquote>❌ No target is set. Use /target to set one.</blockquote>")
 
     await message.reply("<blockquote>📩 Send the **start message link** from the source channel</blockquote>")
     try:
