@@ -264,8 +264,7 @@ async def reset_selected_settings(client, message):
                 "target_chat": "",
                 "filters.replace": "",
                 "filters.delete": "",
-                "filters.remove_links": "",  # reset remove_links too
-                "filters": "",  # optional: reset entire filters, or just keys above
+                "filters.remove_links": "",
                 "auto_pin": ""
             }
         },
