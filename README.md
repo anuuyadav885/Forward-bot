@@ -14,7 +14,7 @@ A feature-rich Telegram bot to forward messages between chats with filters, pinn
 
 ### ☁️ Deploy to Koyeb
 
-[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?name=forward-bot&repository=jairamjiki%2FForward-bot&branch=main&instance_type=free&instances_min=0)
+[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&repository=github.com/jairamjiki/Forward-bot&branch=main&run_command=python3%20main.py&build_command=pip%20install%20-r%20requirements.txt)
 
 ## ⚙️ Environment Variables
 
