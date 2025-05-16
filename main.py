@@ -393,6 +393,7 @@ async def forward_command(client, message):
             msg = await client.get_messages(start_chat, msg_id)
             if msg and not getattr(msg, "empty", False) and not getattr(msg, "protected_content", False):
                 caption = msg.caption
+                caption_entities = msg.caption_entities if caption else None
                 user_data = users.find_one({"user_id": user_id})
                 filters_data = user_data.get("filters", {})
                 auto_pin = filters_data.get("auto_pin", False)
