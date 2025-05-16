@@ -156,8 +156,7 @@ async def set_filters(client, message):
     users.update_one({"user_id": user_id}, {
         "$setOnInsert": {
             "filters": {"replace": {}, "delete": []},
-            "auto_pin": False,
-            "filters.remove_links": False
+            "auto_pin": False
         }
     }, upsert=True)
 
@@ -165,19 +164,16 @@ async def set_filters(client, message):
     filters_data = user.get("filters", {})
     replace = filters_data.get("replace", {})
     delete = filters_data.get("delete", [])
-    remove_links = filters_data.get("remove_links", False)
     auto_pin = user.get("auto_pin", False)
 
     await message.reply(
         "**🔧 Current Filters:**\n"
         f"🔁 Replace: `{replace}`\n"
         f"❌ Delete: `{delete}`\n"
-        f"🔗 Remove Links: `{remove_links}`\n"
         f"📌 Auto Pin: `{auto_pin}`\n\n"
         "**Send filters in one of these formats:**\n"
         "`word1 => word2` to replace\n"
         "`delete: word` to delete word\n"
-        "`remove_links: true/false` to toggle link removal\n"
         "`auto_pin: true/false` to toggle auto pinning\n\n"
         "Type /done to finish."
     )
@@ -209,16 +205,10 @@ async def set_filters(client, message):
                 users.update_one({"user_id": user_id}, {"$set": {"filters.delete": delete}})
             await message.reply(f"❌ Will delete: `{word}`")
 
-        elif text.lower().startswith("remove_links:"):
-            val_raw = text.split("remove_links:", 1)[1].strip().lower()
-            val = val_raw in ["true", "yes", "1"]
-            users.update_one({"user_id": user_id}, {"$set": {"filters.remove_links": val}})
-            await message.reply(f"🔗 Remove links set to: `{val}`")
-
         elif text.lower().startswith("auto_pin:"):
             val_raw = text.split("auto_pin:", 1)[1].strip().lower()
             val = val_raw in ["true", "yes", "1"]
-            users.update_one({"user_id": user_id}, {"$set": {"auto_pin": val}})
+            users.update_one({"user_id": user_id}, {"$set": {"filters.auto_pin": val}})
             await message.reply(f"📌 Auto pin set to: `{val}`")
 
         else:
@@ -369,10 +359,7 @@ async def forward_command(client, message):
                     for word in filters_data.get("delete", []):
                         caption = caption.replace(word, "")
 
-                    if filters_data.get("remove_links", False):
-                        caption = re.sub(r'https?://\S+', '', caption)
-
-                await msg.copy(
+                copied = await msg.copy(
                     target_chat,
                     caption=caption if caption else None,
                     caption_entities=msg.caption_entities if caption else None
