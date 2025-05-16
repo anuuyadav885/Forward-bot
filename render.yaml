@@ -1,9 +1,12 @@
 services:
   - type: web
     name: telegram-forward-bot
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python3 main.py
+    plan: free
+    env: docker
+    dockerfilePath: Dockerfile
+    repo: https://github.com/jairamjiki/Forward-bot
+    branch: main
+    autoDeploy: true
     envVars:
       - key: API_ID
         value: your_api_id
@@ -15,3 +18,5 @@ services:
         value: your_mongo_uri
       - key: OWNER_ID
         value: your_owner_id
+      - key: PORT
+        value: 10000  # Default port value, update if needed
