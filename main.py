@@ -444,7 +444,7 @@ async def forward_command(client, message):
                 f"┃ 📌 Remaining  : `{remaining}`\n"
                 f"┃ ▓ {progress_bar}\n"
                 f"╚═════════════════════════╝\n\n"
-                f"╔═  📈 𝐏𝐄𝐑𝐅𝐎𝐑𝐌𝐀𝐍𝐂𝐄 𝐌𝐀𝐓𝐑𝐈𝐂𝐒  📈  ═╗\n"
+                f"╔═  📈 𝐏𝐄𝐑𝐅𝐎𝐑𝐌𝐀𝐍𝐂𝐄 𝐌𝐀𝐓𝐑𝐈𝐂𝐒 📈  ═╗\n"
                 f"┃\n"
                 f"┃ ✅ Success  : `{count}`\n"
                 f"┃ ❌ Deleted  :  `{failed}`\n"
@@ -470,7 +470,7 @@ async def forward_command(client, message):
         f"┃ ❌ Deleted  : `{failed}`\n"
         f"┃ 📊 Total  : `{total}`\n"
         f"┃ ⏱️ Time  : `{time_taken}`\n"
-        f"╚═════════════════════════╝"
+        f"╚══════════════════════════╝"
     )
 
 @app.on_message(filters.command("cancel") & filters.private)
