@@ -46,7 +46,6 @@ async def set_bot_commands(client, message):
         BotCommand("targetinfo", "ℹ️ Show current target"),
         BotCommand("forward", "📤 Forward messages"),
         BotCommand("reset", "♻️ Reset filters & target"),
-        BotCommand("settings", "⚙️ Open settings menu"),
     ]
 
     await client.set_bot_commands(commands)
@@ -152,23 +151,35 @@ async def start(client: Client, msg: Message):
 @app.on_message(filters.command("filters") & filters.private)
 async def set_filters(client, message):
     user_id = message.from_user.id
-    users.update_one({"user_id": user_id}, {"$setOnInsert": {"filters": {}}}, upsert=True)
-    filters_data = users.find_one({"user_id": user_id}).get("filters", {})
 
+    # Ensure fields exist
+    users.update_one({"user_id": user_id}, {
+        "$setOnInsert": {
+            "filters": {"replace": {}, "delete": []},
+            "auto_pin": False,
+            "filters.remove_links": False
+        }
+    }, upsert=True)
+
+    user = users.find_one({"user_id": user_id})
+    filters_data = user.get("filters", {})
     replace = filters_data.get("replace", {})
     delete = filters_data.get("delete", [])
     remove_links = filters_data.get("remove_links", False)
+    auto_pin = user.get("auto_pin", False)
 
     await message.reply(
         "**🔧 Current Filters:**\n"
         f"🔁 Replace: `{replace}`\n"
         f"❌ Delete: `{delete}`\n"
-        f"🔗 Remove Links: `{remove_links}`\n\n"
+        f"🔗 Remove Links: `{remove_links}`\n"
+        f"📌 Auto Pin: `{auto_pin}`\n\n"
         "**Send filters in one of these formats:**\n"
         "`word1 => word2` to replace\n"
         "`delete: word` to delete word\n"
-        "`remove_links: true/false` to toggle link removal\n\n"
-        "Type `/done` to finish.",
+        "`remove_links: true/false` to toggle link removal\n"
+        "`auto_pin: true/false` to toggle auto pinning\n\n"
+        "Type /done to finish."
     )
 
     while True:
@@ -183,10 +194,13 @@ async def set_filters(client, message):
             return await message.reply("✅ Filters updated!")
 
         if "=>" in text:
-            old, new = [t.strip() for t in text.split("=>", 1)]
-            replace[old] = new
-            users.update_one({"user_id": user_id}, {"$set": {"filters.replace": replace}})
-            await message.reply(f"🔁 Added replace: `{old}` => `{new}`")
+            try:
+                old, new = [t.strip() for t in text.split("=>", 1)]
+                replace[old] = new
+                users.update_one({"user_id": user_id}, {"$set": {"filters.replace": replace}})
+                await message.reply(f"🔁 Added replace: `{old}` => `{new}`")
+            except Exception:
+                await message.reply("❌ Invalid replace format. Use: `old => new`")
 
         elif text.lower().startswith("delete:"):
             word = text.split("delete:", 1)[1].strip()
@@ -196,12 +210,20 @@ async def set_filters(client, message):
             await message.reply(f"❌ Will delete: `{word}`")
 
         elif text.lower().startswith("remove_links:"):
-            val = text.split("remove_links:", 1)[1].strip().lower() in ["true", "yes", "1"]
+            val_raw = text.split("remove_links:", 1)[1].strip().lower()
+            val = val_raw in ["true", "yes", "1"]
             users.update_one({"user_id": user_id}, {"$set": {"filters.remove_links": val}})
             await message.reply(f"🔗 Remove links set to: `{val}`")
 
+        elif text.lower().startswith("auto_pin:"):
+            val_raw = text.split("auto_pin:", 1)[1].strip().lower()
+            val = val_raw in ["true", "yes", "1"]
+            users.update_one({"user_id": user_id}, {"$set": {"auto_pin": val}})
+            await message.reply(f"📌 Auto pin set to: `{val}`")
+
         else:
-            await message.reply("❌ Invalid format. Please try again.")
+            await message.reply("❌ Invalid format. Try again or type `/done` to finish.")
+
 
 @app.on_message(filters.command("reset") & filters.private)
 async def reset_selected_settings(client, message):
@@ -214,13 +236,21 @@ async def reset_selected_settings(client, message):
                 "target_chat": None,
                 "filters.replace": {},
                 "filters.delete": [],
-                "filters.remove_links": False
+                "filters.remove_links": False,
+                "auto_pin": False
             }
         },
         upsert=True
     )
 
-    await message.reply("<b>♻️ Reset complete:</b>\n• Target channel\n• Replace text\n• Delete text\n• Remove links")
+    await message.reply(
+        "♻️ <b>Settings Reset Successfully:</b>\n\n"
+        "• 🎯 Target Channel: <code>Cleared</code>\n"
+        "• 🔁 Replace Words: <code>Cleared</code>\n"
+        "• ❌ Delete Words: <code>Cleared</code>\n"
+        "• 🔗 Remove Links: <code>Disabled</code>\n"
+        "• 📌 Auto Pin: <code>Disabled</code>"
+    )
 
 @app.on_message(filters.command("target") & filters.private)
 async def set_target(client, message):
@@ -347,6 +377,13 @@ async def forward_command(client, message):
                     caption=caption if caption else None,
                     caption_entities=msg.caption_entities if caption else None
                 )
+                if auto_pin and getattr(msg, "pinned", False):
+                    try:
+                        await client.pin_chat_message(target_chat, copied.id, disable_notification=True)
+                        await asyncio.sleep(0.5)
+                        await client.delete_messages(target_chat, copied.id + 1)
+                    except Exception:
+                        pass
                 count += 1
             else:
                 failed += 1
