@@ -191,7 +191,7 @@ async def set_filters(client, message):
         f"🔁 Replace: `{replace}`\n"
         f"❌ Delete: `{delete}`\n"
         f"📌 Auto Pin: `{auto_pin}`\n\n"
-        "**Send filters in one of these formats:**\n"
+        "<blockquote>**Send filters in one of these formats :**</blockquote>\n\n"
         "`word1 => word2` to replace\n"
         "`delete: word` to delete word\n"
         "`auto_pin: true/false` to toggle auto pinning\n\n"
