@@ -389,12 +389,18 @@ async def forward_command(client, message):
                 )
                 if auto_pin:
                     try:
+                        pinned_msg_id = None
                         source_chat = await client.get_chat(msg.chat.id)
-                        pinned_msg = source_chat.pinned_message
-                        if pinned_msg and pinned_msg.id == msg.id:
+                        if source_chat.pinned_message:
+                            pinned_msg_id = source_chat.pinned_message.id
+                        if pinned_msg_id == msg.id:
+                            await asyncio.sleep(1)
                             await client.pin_chat_message(target_chat, copied.id)
                             await asyncio.sleep(0.5)
-                            await client.delete_messages(target_chat, copied.id + 1)
+                            try:
+                                await client.delete_messages(target_chat, copied.id + 1)
+                            except:
+                                pass
                     except Exception as e:
                         print(f"[AutoPin Error] {e}")
                 count += 1
