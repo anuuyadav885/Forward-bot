@@ -176,10 +176,10 @@ async def set_filters(client, message):
     if not is_authorized(user_id):
         await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
         return
-    # Ensure fields exist
+    # Ensure fields exist with default filters including remove_links
     users.update_one({"user_id": user_id}, {
         "$setOnInsert": {
-            "filters": {"replace": {}, "delete": []},
+            "filters": {"replace": {}, "delete": [], "remove_links": False},
             "auto_pin": False
         }
     }, upsert=True)
@@ -188,16 +188,19 @@ async def set_filters(client, message):
     filters_data = user.get("filters", {})
     replace = filters_data.get("replace", {})
     delete = filters_data.get("delete", [])
+    remove_links = filters_data.get("remove_links", False)
     auto_pin = filters_data.get("auto_pin", False)
 
     await message.reply(
-        "**🔧 Current Filters:**\n"
+        "<blockquote>**🔧 Current Filters :**</blockquote>\n\n"
         f"🔁 Replace: `{replace}`\n"
         f"❌ Delete: `{delete}`\n"
+        f"🔗 Remove Links: `{remove_links}`\n"
         f"📌 Auto Pin: `{auto_pin}`\n\n"
         "**Send filters in one of these formats:**\n"
         "`word1 => word2` to replace\n"
         "`delete: word` to delete word\n"
+        "`remove_links: true/false` to toggle removing links\n"
         "`auto_pin: true/false` to toggle auto pinning\n\n"
         "Type /done to finish."
     )
@@ -206,12 +209,12 @@ async def set_filters(client, message):
         try:
             response = await client.listen(message.chat.id, timeout=120)
         except asyncio.TimeoutError:
-            return await message.reply("⏳ Timed out. Run /filters again.")
+            return await message.reply("<blockquote>⏳ Timed out. Run /filters again.</blockquote>")
         
         text = response.text.strip()
 
         if text.lower() == "/done":
-            return await message.reply("✅ Filters updated!")
+            return await message.reply("<blockquote>✅ Filters updated!</blockquote>")
 
         if "=>" in text:
             try:
@@ -220,7 +223,7 @@ async def set_filters(client, message):
                 users.update_one({"user_id": user_id}, {"$set": {"filters.replace": replace}})
                 await message.reply(f"🔁 Added replace: `{old}` => `{new}`")
             except Exception:
-                await message.reply("❌ Invalid replace format. Use: `old => new`")
+                await message.reply("<blockquote>❌ Invalid replace format. Use: `old => new`</blockquote>")
 
         elif text.lower().startswith("delete:"):
             word = text.split("delete:", 1)[1].strip()
@@ -235,34 +238,46 @@ async def set_filters(client, message):
             users.update_one({"user_id": user_id}, {"$set": {"filters.auto_pin": val}})
             await message.reply(f"📌 Auto pin set to: `{val}`")
 
-        else:
-            await message.reply("❌ Invalid format. Try again or type /done to finish.")
+        elif text.lower().startswith("remove_links:"):
+            val_raw = text.split("remove_links:", 1)[1].strip().lower()
+            val = val_raw in ["true", "yes", "1"]
+            users.update_one({"user_id": user_id}, {"$set": {"filters.remove_links": val}})
+            await message.reply(f"🔗 Remove links set to: `{val}`")
 
+        else:
+            await message.reply("<blockquote>❌ Invalid format. Try again or type /done to finish.</blockquote>")
 
 @app.on_message(filters.command("reset") & filters.private)
 async def reset_selected_settings(client, message):
     user_id = message.from_user.id
     if not is_authorized(user_id):
-        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
+        await message.reply(
+            "❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n"
+            "💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !"
+        )
         return
+
     users.update_one(
         {"user_id": user_id},
         {
-            "$set": {
-                "target_chat": None,
-                "filters.replace": {},
-                "filters.delete": [],
-                "auto_pin": False
+            "$unset": {
+                "target_chat": "",
+                "filters.replace": "",
+                "filters.delete": "",
+                "filters.remove_links": "",  # reset remove_links too
+                "filters": "",  # optional: reset entire filters, or just keys above
+                "auto_pin": ""
             }
         },
         upsert=True
     )
 
     await message.reply(
-        "<blockquote>♻️ <b>Settings Reset Successfully:</b></blockquote>\n\n"
+        "<blockquote>♻️ Settings Reset Successfully:</blockquote>\n\n"
         "• 🎯 Target Channel: <code>Cleared</code>\n"
         "• 🔁 Replace Words: <code>Cleared</code>\n"
         "• ❌ Delete Words: <code>Cleared</code>\n"
+        "• 🔗 Remove Links: <code>Cleared</code>\n"
         "• 📌 Auto Pin: <code>Disabled</code>"
     )
 
@@ -308,6 +323,11 @@ async def target_info(client, message):
             f"🎯 Current Target ID: <code>{target_chat_id}</code>\n\n"
             f"(⚠️ Bot may not have access to retrieve the title)"
         )
+        
+link_pattern = re.compile(
+    r"(https?://\S+|www\.\S+|t\.me/\S+|\S+\.(com|net|org|in|xyz|link|live|store|info)\S*|@\w+)",
+    re.IGNORECASE
+)
 
 @app.on_message(filters.command("forward") & filters.private)
 async def forward_command(client, message):
@@ -354,7 +374,7 @@ async def forward_command(client, message):
         f"┃\n"
         f"┃ 🗂 Source : `{source_chat.title}`\n"
         f"┃ 📤 Target : `{target.title}`\n"
-        f"╚═════════════════════════╝"
+        f"╚══════════════════════════╝"
     )
 
 
@@ -377,6 +397,7 @@ async def forward_command(client, message):
                 user_data = users.find_one({"user_id": user_id})
                 filters_data = user_data.get("filters", {})
                 auto_pin = filters_data.get("auto_pin", False)
+                remove_links = filters_data.get("remove_links", False)
 
                 if caption:
                     for old, new in filters_data.get("replace", {}).items():
@@ -384,6 +405,15 @@ async def forward_command(client, message):
 
                     for word in filters_data.get("delete", []):
                         caption = caption.replace(word, "")
+                    
+                    # Remove links and mentions
+                    if remove_links:
+                        caption = link_pattern.sub("", caption).strip()
+                        if caption_entities:
+                            caption_entities = [
+                                ent for ent in caption_entities
+                                if ent.type not in ["url", "text_link", "mention"]
+                            ]
 
                 copied = await msg.copy(
                     target_chat,
