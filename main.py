@@ -228,7 +228,7 @@ async def handle_send_to_owner(bot, query):
 
     await bot.send_message(
         OWNER_ID,
-        f"📬 USER_ID : 👤 {user_id}\n Use Command : `/add {user_id}`"
+        f"📬 USER_ID : 👤 {user_id}\n\nCommand : `/add {user_id}`"
     )
 
     await query.answer("✅ Sent to owner!", show_alert=True)
