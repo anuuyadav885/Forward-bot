@@ -1,29 +1,42 @@
 {
-  "name": "Telegram Forward Bot",
-  "description": "A powerful Telegram forward bot with advanced settings.",
-  "repository": "https://github.com/jairamjiki/Forward-bot",
-  "logo": "https://telegram.org/img/t_logo.png",
-  "keywords": ["telegram", "forward", "bot", "pyrogram"],
-  "env": {
-    "API_ID": {
-      "description": "Get this from https://my.telegram.org"
+    "name": "Drm Uploader By ꧁༺ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ༻꧂",
+    "description": "Forword Bot✅",
+    "logo": "https://tinypic.host/image/Screenshot-2025-03-19-06-40-21-30.3gKoOw",
+    "keywords": [
+        "telegram",
+        "forward",
+        "pyrogram",
+        "bot"
+    ],
+    "repository": "https://github.com/jairamjiki/Forward-bot",
+    "success_url": "https://t.me/+T4CxZVremWUzZmI1",
+    "stack": "container",
+    "env": {
+        "API_ID": {
+            "description": "enter_your_api_id",
+            "value": "",
+            "required": true
+        },
+        "API_HASH": {
+            "description": "enter_your_api_harsh",
+            "value": "",
+            "required": true
+        },
+        "BOT_TOKEN": {
+            "description": "Enter your bot token",
+            "value": "",
+            "required": true
+        },
+        "OWNER_ID":{
+            "description": "Enter your classplus token",
+            "value": "",
+            "required": true
+        }
     },
-    "API_HASH": {
-      "description": "Get this from https://my.telegram.org"
-    },
-    "BOT_TOKEN": {
-      "description": "Bot token from @BotFather"
-    },
-    "MONGO_URL": {
-      "description": "Your MongoDB URI"
-    },
-    "OWNER_ID": {
-      "description": "Your Telegram numeric user ID"
+    "addons": [],
+    "buildpacks": [
+        {
+            "url": "heroku/python"
+        }
+    ]
     }
-  },
-  "buildpacks": [
-    {
-      "url": "heroku/python"
-    }
-  ]
-}
