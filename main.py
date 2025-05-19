@@ -115,7 +115,7 @@ def get_all_users():
 # Global store to keep track of broadcast requests
 broadcast_requests = {}
 
-@app.on_message(filters.command("broadcast") & filters.create(owner_filter))
+@app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
 async def broadcast_handler(bot, message: Message):
     if not message.reply_to_message:
         return await message.reply_text("Reply to a message to broadcast it.")
