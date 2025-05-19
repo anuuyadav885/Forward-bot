@@ -29,6 +29,7 @@ app = Client("forward_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKE
 mongo = MongoClient(MONGO_URI)
 db = mongo["forward_bot"]
 users = db["users"]
+users_collection = db["busers"]
 auth_col = db["auth_users"]
 cancel_flags = {}
 
@@ -97,6 +98,88 @@ async def show_users(_, m):
         return await m.reply("<blockquote>🚫 No authorized users found.</blockquote>")
     user_list = "\n".join(str(u["_id"]) for u in users)
     await m.reply(f"<blockquote>👥 Authorized Users:</blockquote>\n\n{user_list}")
+
+#========================== For broadcast ====================================
+def get_all_users():
+    return [doc["_id"] for doc in users_collection.find()]
+
+# Global store to keep track of broadcast requests
+broadcast_requests = {}
+
+@bot.on_message(filters.command("broadcast") & filters.create(owner_filter))
+async def broadcast_handler(bot, message: Message):
+    if not message.reply_to_message:
+        return await message.reply_text("Reply to a message to broadcast it.")
+
+    # Save the message ID and user ID
+    broadcast_requests[message.from_user.id] = {
+        "chat_id": message.chat.id,
+        "message_id": message.reply_to_message.id
+    }
+
+    buttons = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("✅ Confirm", callback_data="confirm_broadcast"),
+            InlineKeyboardButton("❌ Cancel", callback_data="cancel_broadcast")
+        ]
+    ])
+
+    await message.reply_text(
+        "Are you sure you want to broadcast this message?",
+        reply_markup=buttons
+    )
+
+
+@bot.on_callback_query(filters.regex("^(confirm_broadcast|cancel_broadcast)$"))
+async def handle_broadcast_decision(bot, query: CallbackQuery):
+    user_id = query.from_user.id
+    action = query.data
+
+    if user_id not in broadcast_requests:
+        return await query.answer("No broadcast request found.", show_alert=True)
+
+    data = broadcast_requests.pop(user_id)
+    chat_id = data["chat_id"]
+    message_id = data["message_id"]
+
+    if action == "cancel_broadcast":
+        await query.message.edit_text("❌ Broadcast canceled.")
+        return
+
+    await query.message.edit_text("📣 Broadcasting...")
+
+    # Start broadcasting
+    sent = 0
+    failed = 0
+    total = 0
+    failed_users = []
+
+    users = get_all_users()
+
+    for uid in users:
+        total += 1
+        try:
+            await bot.copy_message(
+                chat_id=uid,
+                from_chat_id=chat_id,
+                message_id=message_id
+            )
+            sent += 1
+        except Exception as e:
+            print(f"Failed to send to {uid}: {e}")
+            failed += 1
+            # Immediately delete the failed user from DB
+            remove_user(uid)
+
+    # Report
+    report_text = (
+        f"<blockquote>📢 <b>Broadcast Complete</b></blockquote>\n\n"
+        f"✅ Sent: {sent}\n"
+        f"❌ Failed to Send: {failed}\n"
+        f"📊 Total Users: {total}"
+    )
+    await bot.send_message(chat_id, report_text)
+
 
 #===================== Detect chat id from message link ===================
 # Utility to extract chat_id and message_id from a message link
