@@ -38,6 +38,7 @@ cancel_flags = {}
 async def set_bot_commands(client, message):
     commands = [
         BotCommand("start", "🚀 Start the bot"),
+        BotCommand("id", "🆔 Show your Telegram ID"),
         BotCommand("add", "➕ Add authorized user"),
         BotCommand("rem", "➖ Remove authorized user"),
         BotCommand("clear", "🗑️ Clear all authorized users"),
