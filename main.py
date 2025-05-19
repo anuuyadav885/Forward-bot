@@ -48,6 +48,7 @@ async def set_bot_commands(client, message):
         BotCommand("targetinfo", "ℹ️ Show current target"),
         BotCommand("forward", "📤 Forward messages"),
         BotCommand("reset", "♻️ Reset filters & target"),
+        BotCommand("broadcast", "📢 Broadcast a massege to users"),
     ]
 
     await client.set_bot_commands(commands)
@@ -59,7 +60,7 @@ def is_authorized(user_id):
 
 #======================== Add user in premium =======================
 @app.on_message(filters.command("add") & filters.user(OWNER_ID))
-async def add_user(_, m):
+async def add_premium(_, m):
     if len(m.command) < 2:
         return await m.reply("<blockquote>⚠️ Usage: /add [user_id]</blockquote>")
     try:
@@ -100,13 +101,20 @@ async def show_users(_, m):
     await m.reply(f"<blockquote>👥 Authorized Users:</blockquote>\n\n{user_list}")
 
 #========================== For broadcast ====================================
+def add_user(user_id):
+    if not users_collection.find_one({"_id": user_id}):
+        users_collection.insert_one({"_id": user_id})
+
+def remove_user(user_id):
+    users_collection.delete_one({"_id": user_id})
+    
 def get_all_users():
     return [doc["_id"] for doc in users_collection.find()]
 
 # Global store to keep track of broadcast requests
 broadcast_requests = {}
 
-@bot.on_message(filters.command("broadcast") & filters.create(owner_filter))
+@app.on_message(filters.command("broadcast") & filters.create(owner_filter))
 async def broadcast_handler(bot, message: Message):
     if not message.reply_to_message:
         return await message.reply_text("Reply to a message to broadcast it.")
@@ -130,7 +138,7 @@ async def broadcast_handler(bot, message: Message):
     )
 
 
-@bot.on_callback_query(filters.regex("^(confirm_broadcast|cancel_broadcast)$"))
+@app.on_callback_query(filters.regex("^(confirm_broadcast|cancel_broadcast)$"))
 async def handle_broadcast_decision(bot, query: CallbackQuery):
     user_id = query.from_user.id
     action = query.data
@@ -180,6 +188,49 @@ async def handle_broadcast_decision(bot, query: CallbackQuery):
     )
     await bot.send_message(chat_id, report_text)
 
+#================= Reactiom & add users in database ======================
+import random
+VALID_EMOJIS = ["😂", "🔥", "🎉", "🥳", "💯", "😎", "😅", "🙏", "👏", "❤️",
+                "🦁", "🐶", "🐼", "🐱", "👻", "🐻‍❄️", "☁️", "🐅", "⚡️", "🚀",
+                "✨", "💥", "☠️", "🥂", "🍾", "🐠", "🦋"]
+
+@app.on_message(filters.text, group=-1)
+async def auto_react(bot, message):
+    if message.edit_date or not message.from_user:
+        return  # Skip edited messages or anonymous/channel messages
+    add_user(message.from_user.id)  # ✅ Auto add user to DB
+    for _ in range(5):  # Try up to 5 different emojis
+        emoji = random.choice(VALID_EMOJIS)
+        try:
+            await message.react(emoji)
+            break  # ✅ Success, exit loop
+        except Exception as e:
+            print(f"❌ Failed to react with {emoji}: {e}")
+            continue  # Try another emoji
+
+#=================== ID ============================
+@app.on_message(filters.command("id"))
+async def send_user_id(bot, message):
+    user_id = message.from_user.id
+    text = f"<blockquote>👤 Your Telegram ID is :</blockquote>\n\n{user_id}"
+
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("📨 Send to Owner", callback_data=f"send_id:{user_id}")]
+    ])
+
+    await message.reply_text(text, reply_markup=keyboard)
+
+
+@app.on_callback_query(filters.regex(r"send_id:(\d+)"))
+async def handle_send_to_owner(bot, query):
+    user_id = int(query.matches[0].group(1))
+
+    await bot.send_message(
+        OWNER_ID,
+        f"📬 USER_ID : 👤 {user_id}\n Use Command : `/add {user_id}`"
+    )
+
+    await query.answer("✅ Sent to owner!", show_alert=True)
 
 #===================== Detect chat id from message link ===================
 # Utility to extract chat_id and message_id from a message link
