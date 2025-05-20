@@ -278,7 +278,6 @@ async def start(client: Client, msg: Message):
             "• /target – Set target via message link\n\n"
             "• /forward – Forward messages\n\n"
             "• /cancel – Cancel ongoing forwarding\n\n"
-            "• /help – Check full working process\n\n"
             "<blockquote>🚀 **Use the bot to forward messages fast and easily!**</blockquote>\n",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("📞 Contact Admin", url="https://t.me/Dc5txt_bot")]
@@ -534,28 +533,28 @@ async def settings_info(client, message):
         try:
             chat = await client.get_chat(target_chat_id)
             target_info_text = (
-                f"<blockquote>🎯 Current Target</blockquote>\n\n"
+                f"**🎯 Current Target**\n\n"
                 f"• Title  : <b>{chat.title}</b>\n"
                 f"• ID  : <code>{target_chat_id}</code>\n"
             )
         except Exception:
             target_info_text = (
-                f"<blockquote>🎯 Current Target</blockquote>\n\n"
+                f"**🎯 Current Target**\n\n"
                 f"• ID  : <code>{target_chat_id}</code>\n"
                 f"(⚠️ Bot may not have access to retrieve the title)\n"
             )
     else:
-        target_info_text = "<blockquote>🎯 Current Target</blockquote>\n\n❌ No target is currently set.\nUse /target to set one.\n"
+        target_info_text = "**🎯 Current Target**\n\n❌ No target is currently set.\nUse /target to set one.\n"
 
     # Final reply
     await message.reply(
         f"<blockquote>⚙️ Settings Information  :</blockquote>\n\n"
-        f"{target_info_text}\n\n"
-        f"<blockquote>🧰 Filter Settings  :</blockquote>\n\n"
+        f"{target_info_text}\n"
+        f"**🧰 Filter Settings  :**\n\n"
         f"🔁 Replace: {replace}\n"
         f"❌ Delete: {delete}\n"
         f"📌 Auto Pin: {auto_pin}\n\n"
-        f"<blockquote>Message Types  :</blockquote>\n\n{type_status}"
+        f"**Message Types  :**\n\n{type_status}"
     )
 
 #========================= Start forward ==============================
