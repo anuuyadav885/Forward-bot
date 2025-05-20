@@ -366,18 +366,18 @@ async def set_filters(client, message):
         "voice", "sticker", "poll", "animation"
     ]
     type_status = "\n".join([
-        f"▪️ {t.capitalize()}: {'✅' if types.get(t, False) else '❌'}"
+        f"▪️ `{t.capitalize()}`: {'✅' if types.get(t, False) else '❌'}"
         for t in allowed_types
     ])
 
     await message.reply(
-        "<blockquote>**🔧 Current Filters :**</blockquote>\n\n"
-        f"🔁 Replace: `{filters_data['replace']}`\n"
-        f"❌ Delete: `{filters_data['delete']}`\n"
-        f"📌 Auto Pin: `{auto_pin}`\n\n"
-        f"<blockquote>Message Types:</blockquote>\n\n{type_status}\n\n"
+        "<blockquote>**🔧 Current Filters  :**</blockquote>\n\n"
+        f"🔁 Replace  : `{filters_data['replace']}`\n"
+        f"❌ Delete  : `{filters_data['delete']}`\n"
+        f"📌 Auto Pin  : `{auto_pin}`\n\n"
+        f"<blockquote>Message Types  :</blockquote>\n\n{type_status}\n\n"
         "<blockquote>**Send filters in one of these formats :**</blockquote>\n\n"
-        "`type: <name> on/off` (e.g., `type: photo off`)\n"
+        "`type: name on/off` (e.g., `type: photo off`)\n"
         "`word1 => word2` to replace\n"
         "`delete: word` to delete word\n"
         "`auto_pin: true/false` to toggle auto pinning\n\n"
