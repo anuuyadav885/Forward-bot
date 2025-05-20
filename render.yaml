@@ -1,3 +1,7 @@
+# render.yaml
+
+name: telegram-forward-bot  # 🔹 Blueprint name added here
+
 services:
   - type: web
     name: telegram-forward-bot
