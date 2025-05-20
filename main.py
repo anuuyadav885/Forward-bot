@@ -48,8 +48,7 @@ async def set_bot_commands(client, message):
         BotCommand("users", "👥 List premium users"),
         BotCommand("filters", "🔍 Toggle media filters"),
         BotCommand("cancel", "🛑 Cancel forwarding"),
-        BotCommand("targetinfo", "ℹ️ Show current target"),
-        BotCommand("filtersinfo", "⚙️ Show current filters"),
+        BotCommand("info", "⚙️ Show current settings"),
         BotCommand("reset", "♻️ Reset filters & target"),
         BotCommand("broadcast", "📢 Broadcast a massege to users"),
     ]
@@ -305,7 +304,7 @@ async def start(client: Client, msg: Message):
 async def set_filters(client, message):
     user_id = message.from_user.id
     if not is_authorized(user_id):
-        return await message.reply("❌ You are not authorized.")
+        return await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
 
     # Ensure the document exists with defaults if missing
     users.update_one(
@@ -366,7 +365,7 @@ async def set_filters(client, message):
         "voice", "sticker", "poll", "animation"
     ]
     type_status = "\n".join([
-        f"▪️ `{t.capitalize()}`: {'✅' if types.get(t, False) else '❌'}"
+        f"▪️ `{t.capitalize()}`   :   {'✅' if types.get(t, False) else '❌'}"
         for t in allowed_types
     ])
 
@@ -386,14 +385,14 @@ async def set_filters(client, message):
 
     while True:
         try:
-            response = await client.listen(message.chat.id, timeout=120)
+            response = await client.listen(message.chat.id, timeout=300)
         except asyncio.TimeoutError:
-            return await message.reply("⏳ Timed out. Run /filters again.")
+            return await message.reply("<blockquote>⏳ Timed out. Run /filters again.</blockquote>")
 
         text = response.text.strip()
 
         if text.lower() == "/done":
-            return await message.reply("✅ Filters updated!")
+            return await message.reply("<blockquote>✅ Filters updated !</blockquote>")
 
         if text.lower().startswith("type:"):
             try:
@@ -403,7 +402,7 @@ async def set_filters(client, message):
                     continue
                 type_name, value_raw = match.groups()
                 if type_name not in allowed_types:
-                    await message.reply(f"❌ Invalid type name: `{type_name}`\n✅ Allowed: {', '.join(allowed_types)}")
+                    await message.reply(f"❌ Invalid type name: `{type_name}`\n\n✅ Allowed: {', '.join(allowed_types)}")
                     continue
                 value = value_raw in ["on", "true", "yes", "1"]
                 filters_data["types"][type_name] = value
@@ -436,42 +435,29 @@ async def set_filters(client, message):
 
         else:
             await message.reply("❌ Invalid format. Try again or type /done to finish.")
-
-#============================== Filter Information ==========================
-@app.on_message(filters.command("filtersinfo") & filters.private)
-async def filters_info(client, message):
-    user_id = message.from_user.id
-    user = users.find_one({"user_id": user_id})
-    if not user:
-        return await message.reply("❌ No filters found.")
-    filters_data = user.get("filters", {})
-    replace = filters_data.get("replace", {})
-    delete = filters_data.get("delete", [])
-    types = filters_data.get("types", {})
-    auto_pin = filters_data.get("auto_pin", False)
-
-    allowed_types = [
-        "text", "photo", "video", "document", "audio",
-        "voice", "sticker", "poll", "animation"
-    ]
-    type_status = "\n".join([
-        f"▪️ {t.capitalize()}: {'✅' if types.get(t, False) else '❌'}"
-        for t in allowed_types
-    ])
-    await message.reply(
-        "<blockquote>🧰 Current Filter Settings:</blockquote>\n\n"
-        f"🔁 Replace: {replace}\n"
-        f"❌ Delete: {delete}\n"
-        f"📌 Auto Pin: {auto_pin}\n\n"
-        f"<blockquote>Message Types:</blockquote>\n{type_status}"
-    )
 #============================= Reset filters ====================================
 @app.on_message(filters.command("reset") & filters.private)
 async def reset_selected_settings(client, message):
     user_id = message.from_user.id
     if not is_authorized(user_id):
-        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
+        await message.reply(
+            "❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n"
+            "💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !"
+        )
         return
+
+    default_types = {
+        "text": True,
+        "photo": True,
+        "video": True,
+        "document": True,
+        "audio": True,
+        "voice": True,
+        "sticker": True,
+        "poll": True,
+        "animation": True
+    }
+
     users.update_one(
         {"user_id": user_id},
         {
@@ -479,6 +465,7 @@ async def reset_selected_settings(client, message):
                 "target_chat": None,
                 "filters.replace": {},
                 "filters.delete": [],
+                "filters.types": default_types,
                 "auto_pin": False
             }
         },
@@ -490,6 +477,7 @@ async def reset_selected_settings(client, message):
         "• 🎯 Target Channel  :  Cleared\n"
         "• 🔁 Replace Words  :  Cleared\n"
         "• ❌ Delete Words  :  Cleared\n"
+        "• 🔘 Message Types  :  Set to Default\n"
         "• 📌 Auto Pin  :  Disabled"
     )
 #=============================== Set target chat ==================================
@@ -512,30 +500,64 @@ async def set_target(client, message):
         await message.reply("<blockquote>⏰ Timed out. Please try again</blockquote>")
         
 #================================ Information of target chat =========================
-@app.on_message(filters.command("targetinfo") & filters.private)
-async def target_info(client, message):
+@app.on_message(filters.command("info") & filters.private)
+async def settings_info(client, message):
     user_id = message.from_user.id
     if not is_authorized(user_id):
-        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
-        return
+        return await message.reply(
+            "❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !"
+        )
+
     user = users.find_one({"user_id": user_id})
-    target_chat_id = user.get("target_chat") if user else None
+    if not user:
+        return await message.reply("<blockquote>❌ No data found for this user.</blockquote>")
 
-    if not target_chat_id:
-        return await message.reply("<blockquote>❌ No target is currently set. Use /target to set one.</blockquote>")
+    # Filters info
+    filters_data = user.get("filters", {})
+    replace = filters_data.get("replace", {})
+    delete = filters_data.get("delete", [])
+    types = filters_data.get("types", {})
+    auto_pin = filters_data.get("auto_pin", False)
 
-    try:
-        chat = await client.get_chat(target_chat_id)
-        await message.reply(
-            f"<blockquote>🎯 Current Target :</blockquote>\n\n"
-            f"• Title : <b>{chat.title}</b>\n"
-            f"• ID : <code>{target_chat_id}</code>"
-        )
-    except Exception:
-        await message.reply(
-            f"🎯 Current Target ID : <code>{target_chat_id}</code>\n\n"
-            f"(⚠️ Bot may not have access to retrieve the title)"
-        )
+    allowed_types = [
+        "text", "photo", "video", "document", "audio",
+        "voice", "sticker", "poll", "animation"
+    ]
+    type_status = "\n".join([
+        f"▪️ `{t.capitalize()}`   :   {'✅' if types.get(t, False) else '❌'}"
+        for t in allowed_types
+    ])
+
+    # Target info
+    target_chat_id = user.get("target_chat")
+    if target_chat_id:
+        try:
+            chat = await client.get_chat(target_chat_id)
+            target_info_text = (
+                f"<blockquote>🎯 Current Target</blockquote>\n\n"
+                f"• Title  : <b>{chat.title}</b>\n"
+                f"• ID  : <code>{target_chat_id}</code>\n"
+            )
+        except Exception:
+            target_info_text = (
+                f"<blockquote>🎯 Current Target</blockquote>\n\n"
+                f"• ID  : <code>{target_chat_id}</code>\n"
+                f"(⚠️ Bot may not have access to retrieve the title)\n"
+            )
+    else:
+        target_info_text = "<blockquote>🎯 Current Target</blockquote>\n\n❌ No target is currently set.\nUse /target to set one.\n"
+
+    # Final reply
+    await message.reply(
+        f"<blockquote>⚙️ Settings Information  :</blockquote>\n\n"
+        f"{target_info_text}\n\n"
+        f"<blockquote>🧰 Filter Settings  :</blockquote>\n\n"
+        f"🔁 Replace: {replace}\n"
+        f"❌ Delete: {delete}\n"
+        f"📌 Auto Pin: {auto_pin}\n\n"
+        f"<blockquote>Message Types  :</blockquote>\n\n{type_status}"
+    )
+
 #========================= Start forward ==============================
 @app.on_message(filters.command("forward") & filters.private)
 async def forward_command(client, message):
