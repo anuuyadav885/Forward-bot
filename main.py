@@ -372,7 +372,12 @@ async def set_filters(client, message):
         if text.lower().startswith("type:"):
             try:
                 _, setting = text.split(":", 1)
-                type_name, value = setting.strip().split()
+                parts = setting.strip().split()
+                if len(parts) != 2:
+                    await message.reply("❌ Invalid format. Use: `type: photo on/off`")
+                    continue
+                type_name, value = parts
+
                 type_name = type_name.lower()
                 allowed_types = [
                     "text", "photo", "video", "document", "audio", 
