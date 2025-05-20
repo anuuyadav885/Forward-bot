@@ -317,12 +317,13 @@ def get_type_buttons(types):
 
 def get_main_filter_buttons():
     return InlineKeyboardMarkup([
-        [[InlineKeyboardButton("🔁 Replace Words", callback_data="edit_replace")]
-         [InlineKeyboardButton("❌ Delete Words", callback_data="edit_delete")]],
-        [[InlineKeyboardButton("📌 Toggle Auto Pin", callback_data="toggle_autopin")]
-         [InlineKeyboardButton("🧪 Message Types", callback_data="edit_types")]],
+        [InlineKeyboardButton("🔁 Replace Words", callback_data="edit_replace"),
+         InlineKeyboardButton("❌ Delete Words", callback_data="edit_delete")],
+        [InlineKeyboardButton("📌 Toggle Auto Pin", callback_data="toggle_autopin"),
+         InlineKeyboardButton("🧪 Message Types", callback_data="edit_types")],
         [InlineKeyboardButton("✅ Done", callback_data="done")]
     ])
+
 
 @app.on_message(filters.command("filters") & filters.private)
 async def show_filter_menu(client: ListenClient, message):
