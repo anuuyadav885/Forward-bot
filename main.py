@@ -279,9 +279,7 @@ async def start(client: Client, msg: Message):
             "• /target – Set target via message link\n\n"
             "• /forward – Forward messages\n\n"
             "• /cancel – Cancel ongoing forwarding\n\n"
-            "• /filters – Edit caption in forwarding\n\n"
-            "• /reset – Reset settings\n\n"
-            "• /targetinfo –Information about target\n\n"
+            "• /help – Check full working process\n\n"
             "<blockquote>🚀 **Use the bot to forward messages fast and easily!**</blockquote>\n",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("📞 Contact Admin", url="https://t.me/Dc5txt_bot")]
@@ -296,7 +294,7 @@ async def start(client: Client, msg: Message):
             "<blockquote>🔐 Features include:</blockquote>\n\n"
             "• Auto messages forwarding\n"
             "• Auto caption editing\n"
-            "• Auto Pining\n\n"
+            "• Auto Pining & Media filters\n\n"
             "<blockquote>To request access, contact the admin below.</blockquote>",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("📞 Contact Admin", url="https://t.me/Dc5txt_bot")]
@@ -387,9 +385,8 @@ async def set_filters(client, message):
                 filters_data["types"][type_name] = value
                 users.update_one({"user_id": user_id}, {"$set": {"filters.types": filters_data["types"]}})
                 await message.reply(f"🔘 `{type_name}` set to `{value}`")
-                except:
-                    await message.reply("❌ Invalid format. Use: `type: photo on/off`")
-
+            except:
+                await message.reply("❌ Invalid format. Use: `type: photo on/off`")
 
         elif "=>" in text:
             try:
@@ -444,8 +441,6 @@ async def filters_info(client, message):
         f"📌 Auto Pin: {auto_pin}\n\n"
         f"<blockquote>Message Types:</blockquote>\n{type_status}"
     )
-
-
 #============================= Reset filters ====================================
 @app.on_message(filters.command("reset") & filters.private)
 async def reset_selected_settings(client, message):
