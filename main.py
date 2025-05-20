@@ -371,14 +371,11 @@ async def set_filters(client, message):
 
         if text.lower().startswith("type:"):
             try:
-                _, setting = text.split(":", 1)
-                parts = setting.strip().split()
-                if len(parts) != 2:
+                match = re.match(r"type:\s*(\w+)\s+(on|off|true|false|yes|no|1|0)", text.lower())
+                if not match:
                     await message.reply("❌ Invalid format. Use: `type: photo on/off`")
                     continue
-                type_name, value = parts
-
-                type_name = type_name.lower()
+                type_name, value_raw = match.groups()
                 allowed_types = [
                     "text", "photo", "video", "document", "audio", 
                     "voice", "sticker", "poll", "animation"
@@ -386,12 +383,12 @@ async def set_filters(client, message):
                 if type_name not in allowed_types:
                     await message.reply(f"❌ Invalid type name: `{type_name}`\n✅ Allowed: {', '.join(allowed_types)}")
                     continue
-                value = value.lower() in ["on", "true", "yes"]
+                value = value_raw in ["on", "true", "yes", "1"]
                 filters_data["types"][type_name] = value
                 users.update_one({"user_id": user_id}, {"$set": {"filters.types": filters_data["types"]}})
                 await message.reply(f"🔘 `{type_name}` set to `{value}`")
-            except:
-                await message.reply("❌ Invalid format. Use: `type: photo on/off`")
+            except Exception as e:
+                await message.reply(f"❌ Unexpected error occurred:\n`{e}`")
 
         elif "=>" in text:
             try:
