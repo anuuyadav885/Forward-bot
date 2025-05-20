@@ -47,7 +47,7 @@ async def set_bot_commands(client, message):
         BotCommand("clear", "🗑️ Clear all authorized users"),
         BotCommand("users", "👥 List premium users"),
         BotCommand("filters", "🔍 Toggle media filters"),
-        BotCommand("cancel", "🛑 Cancel forwarding"),
+        BotCommand("stop", "🛑 Stop forwarding"),
         BotCommand("info", "⚙️ Show current settings"),
         BotCommand("reset", "♻️ Reset filters & target"),
         BotCommand("broadcast", "📢 Broadcast a massege to users"),
@@ -317,10 +317,10 @@ def get_type_buttons(types):
 
 def get_main_filter_buttons():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔁 Replace Words", callback_data="edit_replace")],
-        [InlineKeyboardButton("❌ Delete Words", callback_data="edit_delete")],
-        [InlineKeyboardButton("📌 Toggle Auto Pin", callback_data="toggle_autopin")],
-        [InlineKeyboardButton("🧪 Message Types", callback_data="edit_types")],
+        [[InlineKeyboardButton("🔁 Replace Words", callback_data="edit_replace")]
+         [InlineKeyboardButton("❌ Delete Words", callback_data="edit_delete")]],
+        [[InlineKeyboardButton("📌 Toggle Auto Pin", callback_data="toggle_autopin")]
+         [InlineKeyboardButton("🧪 Message Types", callback_data="edit_types")]],
         [InlineKeyboardButton("✅ Done", callback_data="done")]
     ])
 
@@ -341,7 +341,7 @@ async def show_filter_menu(client: ListenClient, message):
         }
     }, upsert=True)
 
-    await message.reply("⚙️ Filter Settings", reply_markup=get_main_filter_buttons())
+    await message.reply("**⚙️ Change Filter Settings As Your Wish**", reply_markup=get_main_filter_buttons())
 
 @app.on_callback_query(filters.regex("^edit_types$"))
 async def edit_types(_, query: CallbackQuery):
@@ -403,7 +403,7 @@ async def toggle_autopin(_, query: CallbackQuery):
 
 @app.on_callback_query(filters.regex("^back_to_menu$"))
 async def back_to_main(_, query: CallbackQuery):
-    await query.message.edit("⚙️ Filter Settings", reply_markup=get_main_filter_buttons())
+    await query.message.edit("**⚙️ Change Filter Settings As Your Wish**", reply_markup=get_main_filter_buttons())
 
 @app.on_callback_query(filters.regex("^done$"))
 async def done(_, query: CallbackQuery):
@@ -720,7 +720,7 @@ async def forward_command(client, message):
         f"╚══════════════════════════╝"
     )
 #================ Cancel running process ======================
-@app.on_message(filters.command("cancel") & filters.private)
+@app.on_message(filters.command("stop") & filters.private)
 async def cancel_forwarding(client, message):
     user_id = message.from_user.id
     if not is_authorized(user_id):
