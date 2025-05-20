@@ -8,6 +8,7 @@ import tgcrypto
 import requests
 import datetime
 import random
+import math
 from pyromod import listen
 from pyrogram import enums 
 from Crypto.Cipher import AES
@@ -38,16 +39,17 @@ cancel_flags = {}
 async def set_bot_commands(client, message):
     commands = [
         BotCommand("start", "🚀 Start the bot"),
+        BotCommand("target", "🎯 Set target channel"),
+        BotCommand("forward", "📤 Forward messages"),
         BotCommand("id", "🆔 Show your Telegram ID"),
         BotCommand("add", "➕ Add authorized user"),
         BotCommand("rem", "➖ Remove authorized user"),
         BotCommand("clear", "🗑️ Clear all authorized users"),
         BotCommand("users", "👥 List premium users"),
-        BotCommand("target", "🎯 Set target channel"),
         BotCommand("filters", "🔍 Toggle media filters"),
         BotCommand("cancel", "🛑 Cancel forwarding"),
         BotCommand("targetinfo", "ℹ️ Show current target"),
-        BotCommand("forward", "📤 Forward messages"),
+        BotCommand("filtersinfo", "⚙️ Show current filters"),
         BotCommand("reset", "♻️ Reset filters & target"),
         BotCommand("broadcast", "📢 Broadcast a massege to users"),
     ]
@@ -305,12 +307,25 @@ async def start(client: Client, msg: Message):
 async def set_filters(client, message):
     user_id = message.from_user.id
     if not is_authorized(user_id):
-        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
-        return
-    # Ensure fields exist
+        return await message.reply("❌ You are not authorized.")
+
     users.update_one({"user_id": user_id}, {
         "$setOnInsert": {
-            "filters": {"replace": {}, "delete": []},
+            "filters": {
+                "replace": {}, 
+                "delete": [], 
+                "types": {
+                    "text": True,
+                    "photo": True,
+                    "video": True,
+                    "document": True,
+                    "audio": True,
+                    "voice": True,
+                    "sticker": True,
+                    "poll": True,
+                    "animation": True
+                }
+            },
             "auto_pin": False
         }
     }, upsert=True)
@@ -320,44 +335,60 @@ async def set_filters(client, message):
     replace = filters_data.get("replace", {})
     delete = filters_data.get("delete", [])
     auto_pin = filters_data.get("auto_pin", False)
+    types = filters_data.get("types", {})
 
+    type_status = "\n".join([f"▪️ {k}: {'✅' if v else '❌'}" for k, v in types.items()])
     await message.reply(
         "<blockquote>**🔧 Current Filters :**</blockquote>\n\n"
         f"🔁 Replace: `{replace}`\n"
         f"❌ Delete: `{delete}`\n"
         f"📌 Auto Pin: `{auto_pin}`\n\n"
+        f"<blockquote>Message Types:</blockquote>\n\n{type_status}\n\n"
         "<blockquote>**Send filters in one of these formats :**</blockquote>\n\n"
+        "`type: <name> on/off` (e.g., `type: photo off`)\n"
         "`word1 => word2` to replace\n"
         "`delete: word` to delete word\n"
         "`auto_pin: true/false` to toggle auto pinning\n\n"
-        "Type /done to finish."
+        "Type /done to finish.",
     )
 
     while True:
         try:
             response = await client.listen(message.chat.id, timeout=120)
         except asyncio.TimeoutError:
-            return await message.reply("<blockquote>⏳ Timed out. Run /filters again.</blockquote>")
-        
+            return await message.reply("⏳ Timed out. Run /filters again.")
+
         text = response.text.strip()
 
         if text.lower() == "/done":
-            return await message.reply("<blockquote>✅ Filters updated !</blockquote>")
+            return await message.reply("✅ Filters updated!")
 
-        if "=>" in text:
+        if text.lower().startswith("type:"):
+            try:
+                _, setting = text.split(":", 1)
+                type_name, value = setting.strip().split()
+                type_name = type_name.lower()
+                value = value.lower() in ["on", "true", "yes"]
+                filters_data["types"][type_name] = value
+                users.update_one({"user_id": user_id}, {"$set": {"filters.types": filters_data["types"]}})
+                await message.reply(f"🔘 `{type_name}` set to `{value}`")
+            except:
+                await message.reply("❌ Invalid format. Use: `type: photo on/off`")
+
+        elif "=>" in text:
             try:
                 old, new = [t.strip() for t in text.split("=>", 1)]
-                replace[old] = new
-                users.update_one({"user_id": user_id}, {"$set": {"filters.replace": replace}})
+                filters_data["replace"][old] = new
+                users.update_one({"user_id": user_id}, {"$set": {"filters.replace": filters_data["replace"]}})
                 await message.reply(f"🔁 Added replace: `{old}` => `{new}`")
             except Exception:
-                await message.reply("<blockquote>❌ Invalid replace format. Use: `old => new`</blockquote>")
+                await message.reply("❌ Invalid replace format.")
 
         elif text.lower().startswith("delete:"):
             word = text.split("delete:", 1)[1].strip()
-            if word not in delete:
-                delete.append(word)
-                users.update_one({"user_id": user_id}, {"$set": {"filters.delete": delete}})
+            if word not in filters_data["delete"]:
+                filters_data["delete"].append(word)
+                users.update_one({"user_id": user_id}, {"$set": {"filters.delete": filters_data["delete"]}})
             await message.reply(f"❌ Will delete: `{word}`")
 
         elif text.lower().startswith("auto_pin:"):
@@ -367,7 +398,30 @@ async def set_filters(client, message):
             await message.reply(f"📌 Auto pin set to: `{val}`")
 
         else:
-            await message.reply("<blockquote>❌ Invalid format. Try again or type /done to finish.</blockquote>")
+            await message.reply("❌ Invalid format. Try again or type /done to finish.")
+
+#============================== Filter Information ==========================
+@app.on_message(filters.command("filtersinfo") & filters.private)
+async def filters_info(client, message):
+    user_id = message.from_user.id
+    user = users.find_one({"user_id": user_id})
+    if not user:
+        return await message.reply("❌ No filters found.")
+    filters_data = user.get("filters", {})
+    replace = filters_data.get("replace", {})
+    delete = filters_data.get("delete", [])
+    types = filters_data.get("types", {})
+    auto_pin = filters_data.get("auto_pin", False)
+
+    types_view = "\n".join([f"▪️ {k}: {'✅' if v else '❌'}" for k, v in types.items()])
+    await message.reply(
+        "<blockquote>🧰 Current Filter Settings:</blockquote>\n\n"
+        f"🔁 Replace: {replace}\n"
+        f"❌ Delete: {delete}\n"
+        f"📌 Auto Pin: {auto_pin}\n\n"
+        f"<blockquote>Message Types:</blockquote>\n{types_view}"
+    )
+
 
 #============================= Reset filters ====================================
 @app.on_message(filters.command("reset") & filters.private)
@@ -508,6 +562,22 @@ async def forward_command(client, message):
                 caption = msg.caption
                 user_data = users.find_one({"user_id": user_id})
                 filters_data = user_data.get("filters", {})
+                types = filters_data.get("types", {})
+                allowed = (
+                    (msg.text and types.get("text")) or
+                    (msg.photo and types.get("photo")) or
+                    (msg.video and types.get("video")) or
+                    (msg.document and types.get("document")) or
+                    (msg.audio and types.get("audio")) or
+                    (msg.voice and types.get("voice")) or
+                    (msg.sticker and types.get("sticker")) or
+                    (msg.poll and types.get("poll")) or
+                    (msg.animation and types.get("animation"))
+                )
+                if not allowed:
+                    failed += 1
+                    continue
+
                 auto_pin = filters_data.get("auto_pin", False)
 
                 if caption:
@@ -570,6 +640,10 @@ async def forward_command(client, message):
         elapsed_text = format_eta(int(elapsed))
         
         try:
+            current_status = "🟢 Forwarding"
+            if isinstance(e, FloodWait):
+                current_status = f"⏳ FloodWait: {e.value}s"
+                
             await status.edit(
                 f"╔══ 🎯 𝐒𝐎𝐔𝐑𝐂𝐄 / 𝐓𝐀𝐑𝐆𝐄𝐓 𝐈𝐍𝐅𝐎 🎯 ══╗\n"
                 f"┃\n"
@@ -592,6 +666,11 @@ async def forward_command(client, message):
                 f"┃ ⌛ Elapsed  : `{elapsed_text}`\n"
                 f"┃ ⏳ ETA  :  `{eta}`\n"
                 f"╚═════════════════════════╝\n\n"
+                f"╔════ 🔄 𝐂𝐔𝐑𝐑𝐄𝐍𝐓 𝐒𝐓𝐀𝐓𝐔𝐒 🔄 ════╗\n"
+                f"┃\n"
+                f"┃ 💬 Status  : `{current_status}`\n"
+                f"┃ ⚡ Speed  : `{(count + failed)/elapsed:.2f} msg/sec`\n"
+                f"╚═════════════════════════╝"
             )
         except Exception as e:
             print(f"Progress update error: {e}")
