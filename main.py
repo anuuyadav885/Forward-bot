@@ -307,33 +307,59 @@ async def set_filters(client, message):
     if not is_authorized(user_id):
         return await message.reply("❌ You are not authorized.")
 
-    users.update_one({"user_id": user_id}, {
-        "$setOnInsert": {
-            "filters": {
-                "replace": {}, 
-                "delete": [], 
-                "types": {
-                    "text": True,
-                    "photo": True,
-                    "video": True,
-                    "document": True,
-                    "audio": True,
-                    "voice": True,
-                    "sticker": True,
-                    "poll": True,
-                    "animation": True
-                }
-            },
-            "auto_pin": False
-        }
-    }, upsert=True)
+    # Ensure the document exists with defaults if missing
+    users.update_one(
+        {"user_id": user_id},
+        {
+            "$setOnInsert": {
+                "filters": {
+                    "replace": {},
+                    "delete": [],
+                    "types": {
+                        "text": True,
+                        "photo": True,
+                        "video": True,
+                        "document": True,
+                        "audio": True,
+                        "voice": True,
+                        "sticker": True,
+                        "poll": True,
+                        "animation": True
+                    }
+                },
+                "auto_pin": False
+            }
+        },
+        upsert=True
+    )
 
     user = users.find_one({"user_id": user_id})
     filters_data = user.get("filters", {})
-    replace = filters_data.get("replace", {})
-    delete = filters_data.get("delete", [])
-    auto_pin = filters_data.get("auto_pin", False)
-    types = filters_data.get("types", {})
+
+    # Safe defaulting for all keys
+    filters_data.setdefault("replace", {})
+    filters_data.setdefault("delete", [])
+    filters_data.setdefault("types", {
+        "text": True,
+        "photo": True,
+        "video": True,
+        "document": True,
+        "audio": True,
+        "voice": True,
+        "sticker": True,
+        "poll": True,
+        "animation": True
+    })
+
+    # Update Mongo if anything was missing
+    users.update_one({"user_id": user_id}, {"$set": {
+        "filters.replace": filters_data["replace"],
+        "filters.delete": filters_data["delete"],
+        "filters.types": filters_data["types"]
+    }})
+
+    auto_pin = user.get("auto_pin", False)
+    types = filters_data["types"]
 
     allowed_types = [
         "text", "photo", "video", "document", "audio",
@@ -346,8 +372,8 @@ async def set_filters(client, message):
 
     await message.reply(
         "<blockquote>**🔧 Current Filters :**</blockquote>\n\n"
-        f"🔁 Replace: `{replace}`\n"
-        f"❌ Delete: `{delete}`\n"
+        f"🔁 Replace: `{filters_data['replace']}`\n"
+        f"❌ Delete: `{filters_data['delete']}`\n"
         f"📌 Auto Pin: `{auto_pin}`\n\n"
         f"<blockquote>Message Types:</blockquote>\n\n{type_status}\n\n"
         "<blockquote>**Send filters in one of these formats :**</blockquote>\n\n"
@@ -376,10 +402,6 @@ async def set_filters(client, message):
                     await message.reply("❌ Invalid format. Use: `type: photo on/off`")
                     continue
                 type_name, value_raw = match.groups()
-                allowed_types = [
-                    "text", "photo", "video", "document", "audio", 
-                    "voice", "sticker", "poll", "animation"
-                ]
                 if type_name not in allowed_types:
                     await message.reply(f"❌ Invalid type name: `{type_name}`\n✅ Allowed: {', '.join(allowed_types)}")
                     continue
@@ -401,7 +423,7 @@ async def set_filters(client, message):
 
         elif text.lower().startswith("delete:"):
             word = text.split("delete:", 1)[1].strip()
-            if word not in filters_data["delete"]:
+            if word and word not in filters_data["delete"]:
                 filters_data["delete"].append(word)
                 users.update_one({"user_id": user_id}, {"$set": {"filters.delete": filters_data["delete"]}})
             await message.reply(f"❌ Will delete: `{word}`")
