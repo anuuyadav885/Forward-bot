@@ -337,7 +337,15 @@ async def set_filters(client, message):
     auto_pin = filters_data.get("auto_pin", False)
     types = filters_data.get("types", {})
 
-    type_status = "\n".join([f"▪️ {k}: {'✅' if v else '❌'}" for k, v in types.items()])
+    allowed_types = [
+        "text", "photo", "video", "document", "audio",
+        "voice", "sticker", "poll", "animation"
+    ]
+    type_status = "\n".join([
+        f"▪️ {t.capitalize()}: {'✅' if types.get(t, False) else '❌'}"
+        for t in allowed_types
+    ])
+
     await message.reply(
         "<blockquote>**🔧 Current Filters :**</blockquote>\n\n"
         f"🔁 Replace: `{replace}`\n"
@@ -368,12 +376,20 @@ async def set_filters(client, message):
                 _, setting = text.split(":", 1)
                 type_name, value = setting.strip().split()
                 type_name = type_name.lower()
+                allowed_types = [
+                    "text", "photo", "video", "document", "audio", 
+                    "voice", "sticker", "poll", "animation"
+                ]
+                if type_name not in allowed_types:
+                    await message.reply(f"❌ Invalid type name: `{type_name}`\n✅ Allowed: {', '.join(allowed_types)}")
+                    continue
                 value = value.lower() in ["on", "true", "yes"]
                 filters_data["types"][type_name] = value
                 users.update_one({"user_id": user_id}, {"$set": {"filters.types": filters_data["types"]}})
                 await message.reply(f"🔘 `{type_name}` set to `{value}`")
-            except:
-                await message.reply("❌ Invalid format. Use: `type: photo on/off`")
+                except:
+                    await message.reply("❌ Invalid format. Use: `type: photo on/off`")
+
 
         elif "=>" in text:
             try:
@@ -413,13 +429,20 @@ async def filters_info(client, message):
     types = filters_data.get("types", {})
     auto_pin = filters_data.get("auto_pin", False)
 
-    types_view = "\n".join([f"▪️ {k}: {'✅' if v else '❌'}" for k, v in types.items()])
+    allowed_types = [
+        "text", "photo", "video", "document", "audio",
+        "voice", "sticker", "poll", "animation"
+    ]
+    type_status = "\n".join([
+        f"▪️ {t.capitalize()}: {'✅' if types.get(t, False) else '❌'}"
+        for t in allowed_types
+    ])
     await message.reply(
         "<blockquote>🧰 Current Filter Settings:</blockquote>\n\n"
         f"🔁 Replace: {replace}\n"
         f"❌ Delete: {delete}\n"
         f"📌 Auto Pin: {auto_pin}\n\n"
-        f"<blockquote>Message Types:</blockquote>\n{types_view}"
+        f"<blockquote>Message Types:</blockquote>\n{type_status}"
     )
 
 
