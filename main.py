@@ -358,7 +358,7 @@ async def set_filters(client, message):
         "filters.types": filters_data["types"]
     }})
 
-    auto_pin = user.get("auto_pin", False)
+    auto_pin = user.get("auto_pin", True)
     types = filters_data["types"]
 
     allowed_types = [
@@ -682,10 +682,6 @@ async def forward_command(client, message):
         elapsed_text = format_eta(int(elapsed))
         
         try:
-            current_status = "🟢 Forwarding"
-            if isinstance(e, FloodWait):
-                current_status = f"⏳ FloodWait: {e.value}s"
-                
             await status.edit(
                 f"╔══ 🎯 𝐒𝐎𝐔𝐑𝐂𝐄 / 𝐓𝐀𝐑𝐆𝐄𝐓 𝐈𝐍𝐅𝐎 🎯 ══╗\n"
                 f"┃\n"
@@ -707,12 +703,8 @@ async def forward_command(client, message):
                 f"┃\n"
                 f"┃ ⌛ Elapsed  : `{elapsed_text}`\n"
                 f"┃ ⏳ ETA  :  `{eta}`\n"
-                f"╚═════════════════════════╝\n\n"
-                f"╔════ 🔄 𝐂𝐔𝐑𝐑𝐄𝐍𝐓 𝐒𝐓𝐀𝐓𝐔𝐒 🔄 ════╗\n"
-                f"┃\n"
-                f"┃ 💬 Status  : `{current_status}`\n"
                 f"┃ ⚡ Speed  : `{(count + failed)/elapsed:.2f} msg/sec`\n"
-                f"╚═════════════════════════╝"
+                f"╚═════════════════════════╝\n\n"
             )
         except Exception as e:
             print(f"Progress update error: {e}")
