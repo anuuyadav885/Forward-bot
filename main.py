@@ -299,141 +299,116 @@ async def start(client: Client, msg: Message):
             ])
         )
 #================================ Set filters =============================
-@app.on_message(filters.command("filters") & filters.private)
-async def set_filters(client, message):
-    user_id = message.from_user.id
-    if not is_authorized(user_id):
-        return await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
+from pyromod.listen import Client as ListenClient
 
-    # Ensure the document exists with defaults if missing
-    users.update_one(
-        {"user_id": user_id},
-        {
-            "$setOnInsert": {
-                "filters": {
-                    "replace": {},
-                    "delete": [],
-                    "types": {
-                        "text": True,
-                        "photo": True,
-                        "video": True,
-                        "document": True,
-                        "audio": True,
-                        "voice": True,
-                        "sticker": True,
-                        "poll": True,
-                        "animation": True
-                    }
-                },
-                "auto_pin": False
-            }
-        },
-        upsert=True
-    )
+DEFAULT_TYPES = {
+    "text": True, "photo": True, "video": True, "document": True,
+    "audio": True, "voice": True, "sticker": True, "poll": True, "animation": True
+}
+ALLOWED_TYPES = list(DEFAULT_TYPES.keys())
 
-    user = users.find_one({"user_id": user_id})
-    filters_data = user.get("filters", {})
-
-    # Safe defaulting for all keys
-    filters_data.setdefault("replace", {})
-    filters_data.setdefault("delete", [])
-    filters_data.setdefault("types", {
-        "text": True,
-        "photo": True,
-        "video": True,
-        "document": True,
-        "audio": True,
-        "voice": True,
-        "sticker": True,
-        "poll": True,
-        "animation": True
-    })
-
-    # Update Mongo if anything was missing
-    users.update_one({"user_id": user_id}, {"$set": {
-        "filters.replace": filters_data["replace"],
-        "filters.delete": filters_data["delete"],
-        "filters.types": filters_data["types"]
-    }})
-
-    auto_pin = user.get("auto_pin", True)
-    types = filters_data["types"]
-
-    allowed_types = [
-        "text", "photo", "video", "document", "audio",
-        "voice", "sticker", "poll", "animation"
+def get_type_buttons(types):
+    return [
+        InlineKeyboardButton(
+            f"{'✅' if types[t] else '❌'} {t.capitalize()}",
+            callback_data=f"type_{t}"
+        ) for t in ALLOWED_TYPES
     ]
-    type_status = "\n".join([
-        f"▪️ `{t.capitalize()}`   :   {'✅' if types.get(t, False) else '❌'}"
-        for t in allowed_types
+
+def get_main_filter_buttons():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔁 Replace Words", callback_data="edit_replace")],
+        [InlineKeyboardButton("❌ Delete Words", callback_data="edit_delete")],
+        [InlineKeyboardButton("📌 Toggle Auto Pin", callback_data="toggle_autopin")],
+        [InlineKeyboardButton("🧪 Message Types", callback_data="edit_types")],
+        [InlineKeyboardButton("✅ Done", callback_data="done")]
     ])
 
-    await message.reply(
-        "<blockquote>**🔧 Current Filters  :**</blockquote>\n\n"
-        f"🔁 Replace  : `{filters_data['replace']}`\n"
-        f"❌ Delete  : `{filters_data['delete']}`\n"
-        f"📌 Auto Pin  : `{auto_pin}`\n\n"
-        f"<blockquote>Message Types  :</blockquote>\n\n{type_status}\n\n"
-        "<blockquote>**Send filters in one of these formats :**</blockquote>\n\n"
-        "`type: name on/off` (e.g., `type: photo off`)\n"
-        "`word1 => word2` to replace\n"
-        "`delete: word` to delete word\n"
-        "`auto_pin: true/false` to toggle auto pinning\n\n"
-        "Type /done to finish.",
-    )
+@app.on_message(filters.command("filters") & filters.private)
+async def show_filter_menu(client: ListenClient, message):
+    user_id = message.from_user.id
+    if not is_authorized(user_id):
+        return await message.reply("❌ You are not authorized.")
 
-    while True:
-        try:
-            response = await client.listen(message.chat.id, timeout=300)
-        except asyncio.TimeoutError:
-            return await message.reply("<blockquote>⏳ Timed out. Run /filters again.</blockquote>")
+    users.update_one({"user_id": user_id}, {
+        "$setOnInsert": {
+            "filters": {
+                "replace": {},
+                "delete": [],
+                "types": DEFAULT_TYPES.copy()
+            },
+            "auto_pin": False
+        }
+    }, upsert=True)
 
-        text = response.text.strip()
+    await message.reply("⚙️ Filter Settings", reply_markup=get_main_filter_buttons())
 
-        if text.lower() == "/done":
-            return await message.reply("<blockquote>✅ Filters updated !</blockquote>")
+@app.on_callback_query(filters.regex("^edit_types$"))
+async def edit_types(_, query: CallbackQuery):
+    user_id = query.from_user.id
+    user = users.find_one({"user_id": user_id})
+    types = user.get("filters", {}).get("types", DEFAULT_TYPES.copy())
+    rows = [get_type_buttons(types)[i:i+3] for i in range(0, len(ALLOWED_TYPES), 3)]
+    rows.append([InlineKeyboardButton("🔙 Back", callback_data="back_to_menu")])
+    await query.message.edit("📨 Toggle Message Types", reply_markup=InlineKeyboardMarkup(rows))
 
-        if text.lower().startswith("type:"):
-            try:
-                match = re.match(r"type:\s*(\w+)\s+(on|off|true|false|yes|no|1|0)", text.lower())
-                if not match:
-                    await message.reply("❌ Invalid format. Use: `type: photo on/off`")
-                    continue
-                type_name, value_raw = match.groups()
-                if type_name not in allowed_types:
-                    await message.reply(f"❌ Invalid type name: `{type_name}`\n\n✅ Allowed: {', '.join(allowed_types)}")
-                    continue
-                value = value_raw in ["on", "true", "yes", "1"]
-                filters_data["types"][type_name] = value
-                users.update_one({"user_id": user_id}, {"$set": {"filters.types": filters_data["types"]}})
-                await message.reply(f"🔘 `{type_name}` set to `{value}`")
-            except Exception as e:
-                await message.reply(f"❌ Unexpected error occurred:\n`{e}`")
+@app.on_callback_query(filters.regex("^type_"))
+async def toggle_type(_, query: CallbackQuery):
+    type_name = query.data.split("_")[1]
+    user_id = query.from_user.id
+    user = users.find_one({"user_id": user_id})
+    filters_data = user.get("filters", {})
+    types = filters_data.get("types", DEFAULT_TYPES.copy())
+    types[type_name] = not types.get(type_name, True)
+    users.update_one({"user_id": user_id}, {"$set": {"filters.types": types}})
+    await edit_types(_, query)
 
-        elif "=>" in text:
-            try:
-                old, new = [t.strip() for t in text.split("=>", 1)]
-                filters_data["replace"][old] = new
-                users.update_one({"user_id": user_id}, {"$set": {"filters.replace": filters_data["replace"]}})
-                await message.reply(f"🔁 Added replace: `{old}` => `{new}`")
-            except Exception:
-                await message.reply("❌ Invalid replace format.")
+@app.on_callback_query(filters.regex("^edit_replace$"))
+async def edit_replace(client: ListenClient, query: CallbackQuery):
+    await query.message.edit("🔁 Send replace in format: `old => new`\nType /cancel to abort.")
+    try:
+        response = await client.listen(query.message.chat.id, timeout=120)
+        if response.text.lower() == "/cancel":
+            return await query.message.reply("❌ Cancelled.", reply_markup=get_main_filter_buttons())
+        old, new = [t.strip() for t in response.text.split("=>", 1)]
+        users.update_one({"user_id": query.from_user.id}, {"$set": {f"filters.replace.{old}": new}})
+        await query.message.reply(f"✅ Replacing `{old}` with `{new}`", reply_markup=get_main_filter_buttons())
+    except Exception:
+        await query.message.reply("❌ Invalid format. Try again.", reply_markup=get_main_filter_buttons())
 
-        elif text.lower().startswith("delete:"):
-            word = text.split("delete:", 1)[1].strip()
-            if word and word not in filters_data["delete"]:
-                filters_data["delete"].append(word)
-                users.update_one({"user_id": user_id}, {"$set": {"filters.delete": filters_data["delete"]}})
-            await message.reply(f"❌ Will delete: `{word}`")
+@app.on_callback_query(filters.regex("^edit_delete$"))
+async def edit_delete(client: ListenClient, query: CallbackQuery):
+    await query.message.edit("❌ Send a word to delete\nType /cancel to abort.")
+    try:
+        response = await client.listen(query.message.chat.id, timeout=120)
+        word = response.text.strip()
+        if word.lower() == "/cancel":
+            return await query.message.reply("❌ Cancelled.", reply_markup=get_main_filter_buttons())
+        user = users.find_one({"user_id": query.from_user.id})
+        delete_list = user.get("filters", {}).get("delete", [])
+        if word not in delete_list:
+            delete_list.append(word)
+            users.update_one({"user_id": query.from_user.id}, {"$set": {"filters.delete": delete_list}})
+        await query.message.reply(f"✅ Will delete: `{word}`", reply_markup=get_main_filter_buttons())
+    except Exception:
+        await query.message.reply("❌ Failed. Try again.", reply_markup=get_main_filter_buttons())
 
-        elif text.lower().startswith("auto_pin:"):
-            val_raw = text.split("auto_pin:", 1)[1].strip().lower()
-            val = val_raw in ["true", "yes", "1"]
-            users.update_one({"user_id": user_id}, {"$set": {"filters.auto_pin": val}})
-            await message.reply(f"📌 Auto pin set to: `{val}`")
+@app.on_callback_query(filters.regex("^toggle_autopin$"))
+async def toggle_autopin(_, query: CallbackQuery):
+    user = users.find_one({"user_id": query.from_user.id})
+    current = user.get("auto_pin", False)
+    users.update_one({"user_id": query.from_user.id}, {"$set": {"auto_pin": not current}})
+    status = "✅ Enabled" if not current else "❌ Disabled"
+    await query.answer(f"Auto Pin: {status}", show_alert=True)
 
-        else:
-            await message.reply("❌ Invalid format. Try again or type /done to finish.")
+@app.on_callback_query(filters.regex("^back_to_menu$"))
+async def back_to_main(_, query: CallbackQuery):
+    await query.message.edit("⚙️ Filter Settings", reply_markup=get_main_filter_buttons())
+
+@app.on_callback_query(filters.regex("^done$"))
+async def done(_, query: CallbackQuery):
+    await query.message.edit("✅ Filters saved successfully.")
+
 #============================= Reset filters ====================================
 @app.on_message(filters.command("reset") & filters.private)
 async def reset_selected_settings(client, message):
