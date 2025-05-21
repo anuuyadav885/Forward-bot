@@ -371,7 +371,7 @@ async def edit_replace(client: ListenClient, query: CallbackQuery):
     try:
         response = await client.listen(query.message.chat.id, timeout=120)
         if response.text.lower() == "/cancel":
-            return await query.message.reply("❌ Cancelled.", reply_markup=get_main_filter_buttons())
+            return await query.message.edit("❌ Cancelled.", reply_markup=get_main_filter_buttons())
         old, new = [t.strip() for t in response.text.split("=>", 1)]
         users.update_one({"user_id": query.from_user.id}, {"$set": {f"filters.replace.{old}": new}})
         await query.message.edit(f"✅ Replacing `{old}` with `{new}`", reply_markup=get_main_filter_buttons())
@@ -385,7 +385,7 @@ async def edit_delete(client: ListenClient, query: CallbackQuery):
         response = await client.listen(query.message.chat.id, timeout=120)
         word = response.text.strip()
         if word.lower() == "/cancel":
-            return await query.message.reply("❌ Cancelled.", reply_markup=get_main_filter_buttons())
+            return await query.message.edit("❌ Cancelled.", reply_markup=get_main_filter_buttons())
         user = users.find_one({"user_id": query.from_user.id})
         delete_list = user.get("filters", {}).get("delete", [])
         if word not in delete_list:
@@ -422,7 +422,7 @@ async def set_target_callback(client, query: CallbackQuery):
         link = link_msg.text.strip()
         chat_id, _ = extract_ids_from_link(link)
         if not chat_id:
-            return await query.message.reply("<blockquote>❌ Invalid link</blockquote>", reply_markup=get_main_filter_buttons())
+            return await query.message.edit("<blockquote>❌ Invalid link</blockquote>", reply_markup=get_main_filter_buttons())
         users.update_one({"user_id": user_id}, {"$set": {"target_chat": chat_id}}, upsert=True)
         await query.message.edit(f"<blockquote>✅ Target set to `{chat_id}`</blockquote>", reply_markup=get_main_filter_buttons())
     except asyncio.TimeoutError:
