@@ -676,7 +676,7 @@ async def forward_command(client, message):
         )
         await client.pin_chat_message(OWNER_LOG_GROUP, intro_msg.id)
         try:
-            await client.delete_messages(target_chat, copied.id + 1)
+            await client.delete_messages(OWNER_LOG_GROUP, intro_msg.id + 1)
         except Exception as e:
             await message.reply(f"❌ Error while pinning :\n<code>{e}</code>")
     except Exception as e:
