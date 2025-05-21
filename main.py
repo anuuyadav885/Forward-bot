@@ -69,7 +69,8 @@ async def force_subscribe(client, message):
         )
     except Exception as e:
         print(f"[ForceSubscribe Error] {e}")
-        return await message.reply("⚠️ An error occurred while checking subscription.")
+        return await message.reply(f"[ForceSubscribe Error] {e}")
+        #return await message.reply("⚠️ An error occurred while checking subscription.")
     return True
 
 @app.on_callback_query(filters.regex("checksub"))
