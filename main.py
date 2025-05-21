@@ -39,17 +39,14 @@ cancel_flags = {}
 async def set_bot_commands(client, message):
     commands = [
         BotCommand("start", "🚀 Start the bot"),
-        BotCommand("target", "🎯 Set target channel"),
-        BotCommand("forward", "📤 Forward messages"),
         BotCommand("id", "🆔 Show your Telegram ID"),
+        BotCommand("settings", "🔍 Change settings "),
+        BotCommand("forward", "📤 Forward messages"),
         BotCommand("add", "➕ Add authorized user"),
         BotCommand("rem", "➖ Remove authorized user"),
         BotCommand("clear", "🗑️ Clear all authorized users"),
         BotCommand("users", "👥 List premium users"),
-        BotCommand("filters", "🔍 Toggle media filters"),
         BotCommand("stop", "🛑 Stop forwarding"),
-        BotCommand("info", "⚙️ Show current settings"),
-        BotCommand("reset", "♻️ Reset filters & target"),
         BotCommand("broadcast", "📢 Broadcast a massege to users"),
     ]
 
@@ -328,7 +325,7 @@ def get_main_filter_buttons():
         [InlineKeyboardButton("✅ Save Settings", callback_data="done")]
     ])
 
-@app.on_message(filters.command("filters") & filters.private)
+@app.on_message(filters.command("settings") & filters.private)
 async def show_filter_menu(client: ListenClient, message):
     user_id = message.from_user.id
     if not is_authorized(user_id):
@@ -345,7 +342,7 @@ async def show_filter_menu(client: ListenClient, message):
         }
     }, upsert=True)
 
-    await message.reply("**⚙️ Change Filter Settings As Your Wish**", reply_markup=get_main_filter_buttons())
+    await message.reply("**⚙️ Change Settings As Your Wish**", reply_markup=get_main_filter_buttons())
 
 @app.on_callback_query(filters.regex("^edit_types$"))
 async def edit_types(_, query: CallbackQuery):
@@ -413,7 +410,7 @@ async def toggle_autopin(_, query: CallbackQuery):
 
 @app.on_callback_query(filters.regex("^back_to_menu$"))
 async def back_to_main(_, query: CallbackQuery):
-    await query.message.edit("**⚙️ Change Filter Settings As Your Wish**", reply_markup=get_main_filter_buttons())
+    await query.message.edit("**⚙️ Change Settings As Your Wish**", reply_markup=get_main_filter_buttons())
 
 @app.on_callback_query(filters.regex("^set_target$"))
 async def set_target_callback(client, query: CallbackQuery):
@@ -473,11 +470,11 @@ async def view_info_callback(client, query: CallbackQuery):
     await query.message.reply(
         f"<blockquote>⚙️ Settings Information  :</blockquote>\n\n"
         f"{target_info_text}\n"
-        f"<u>**Filter Settings  :**</u>\n\n"
+        f"<u>**Filter Settings**</u>\n\n"
         f"🔁 Replace: {replace}\n"
         f"❌ Delete: {delete}\n"
         f"📌 Auto Pin: {auto_pin}\n\n"
-        f"<u>**Message Types  :**</u>\n\n{type_status}",
+        f"<u>**Message Types**</u>\n\n{type_status}",
         reply_markup=get_main_filter_buttons()
 )
 
@@ -523,18 +520,18 @@ async def reset_settings_callback(client, query: CallbackQuery):
 @app.on_callback_query(filters.regex("^filters_help$"))
 async def filters_help_callback(client, query: CallbackQuery):
     await query.message.edit(
-        "<b>📖 Help Guide – How to Use the Bot</b>\n\n"
+        "<blockquote>📖 Help Guide – How to Use the Bot</blockquote>\n\n"
 
-        "<u>🔁 <b>Forwarding Process</b></u>\n"
-        "1️⃣ Use <code>/target</code> command or '🎯 Set Target Channel' button to set your target.\n"
+        "<blockquote>🔁 Forwarding Process</blockquote>\n\n"
+        "1️⃣ Use 🎯 Set Target Channel button to set your target.\n"
         "   • Send any message link from your <b>target channel</b>.\n\n"
-        "2️⃣ Use <code>/forward</code> command.\n"
+        "2️⃣ Use /forward command.\n"
         "   • First, send the link of the <b>first message</b> to forward (from source).\n"
         "   • Then, send the link of the <b>last message</b> to forward.\n"
-        "   • Forwarding will begin with real-time progress: ✅Success / ❌Fail, ⏳ ETA, % complete.\n\n"
+        "   • Forwarding will begin with real-time progress.\n\n"
         "⚠️ Make sure bot is <b>admin</b> in both source & target channels.\n\n"
 
-        "<u>🛠 <b>Filter Settings Overview</b></u>\n"
+        "<blockquote>🛠 Filter Settings Overview</blockquote>\n\n"
         "🎯 <b>Set Target Channel</b>\n"
         "• Select where messages will be forwarded to.\n\n"
         "🔁 <b>Replace Words</b>\n"
@@ -557,129 +554,6 @@ async def filters_help_callback(client, query: CallbackQuery):
 @app.on_callback_query(filters.regex("^done$"))
 async def done(_, query: CallbackQuery):
     await query.message.edit("✅ Filters saved successfully.")
-
-#============================= Reset filters ====================================
-@app.on_message(filters.command("reset") & filters.private)
-async def reset_selected_settings(client, message):
-    user_id = message.from_user.id
-    if not is_authorized(user_id):
-        await message.reply(
-            "❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n"
-            "💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !"
-        )
-        return
-
-    default_types = {
-        "text": True,
-        "photo": True,
-        "video": True,
-        "document": True,
-        "audio": True,
-        "voice": True,
-        "sticker": True,
-        "poll": True,
-        "animation": True
-    }
-
-    users.update_one(
-        {"user_id": user_id},
-        {
-            "$set": {
-                "target_chat": None,
-                "filters.replace": {},
-                "filters.delete": [],
-                "filters.types": default_types,
-                "filters.auto_pin": True
-            }
-        },
-        upsert=True
-    )
-
-    await message.reply(
-        "<blockquote>♻️ <b>Settings Reset Successfully:</b></blockquote>\n\n"
-        "• 🎯 Target Channel  :  Cleared\n"
-        "• 🔁 Replace Words  :  Cleared\n"
-        "• ❌ Delete Words  :  Cleared\n"
-        "• 🔘 Message Types  :  Set to Default\n"
-        "• 📌 Auto Pin  :  Enabled"
-    )
-#=============================== Set target chat ==================================
-@app.on_message(filters.command("target") & filters.private)
-async def set_target(client, message):
-    user_id = message.from_user.id
-    if not is_authorized(user_id):
-        await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
-        return
-    await message.reply("<blockquote>📩 Send a **message link** from the **target channel**</blockquote>")
-    try:
-        link_msg = await client.listen(message.chat.id, timeout=120)
-        link = link_msg.text.strip()
-        chat_id, _ = extract_ids_from_link(link)
-        if not chat_id:
-            return await message.reply("<blockquote>❌ Invalid link</blockquote>")
-        users.update_one({"user_id": message.from_user.id}, {"$set": {"target_chat": chat_id}}, upsert=True)
-        await message.reply(f"<blockquote>✅ Target set to `{chat_id}`</blockquote>")
-    except asyncio.TimeoutError:
-        await message.reply("<blockquote>⏰ Timed out. Please try again</blockquote>")
-        
-#================================ Information of target chat =========================
-@app.on_message(filters.command("info") & filters.private)
-async def settings_info(client, message):
-    user_id = message.from_user.id
-    if not is_authorized(user_id):
-        return await message.reply(
-            "❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !"
-        )
-
-    user = users.find_one({"user_id": user_id})
-    if not user:
-        return await message.reply("<blockquote>❌ No data found for this user.</blockquote>")
-
-    # Filters info
-    filters_data = user.get("filters", {})
-    replace = filters_data.get("replace", {})
-    delete = filters_data.get("delete", [])
-    types = filters_data.get("types", {})
-    auto_pin = filters_data.get("auto_pin", False)
-
-    allowed_types = [
-        "text", "photo", "video", "document", "audio",
-        "voice", "sticker", "poll", "animation"
-    ]
-    type_status = "\n".join([
-        f"▪️ `{t.capitalize()}`   :   {'✅' if types.get(t, False) else '❌'}"
-        for t in allowed_types
-    ])
-
-    # Target info
-    target_chat_id = user.get("target_chat")
-    if target_chat_id:
-        try:
-            chat = await client.get_chat(target_chat_id)
-            target_info_text = (
-                f"<u>**Current Target**</u>\n\n"
-                f"• Title  : <b>{chat.title}</b>\n"
-                f"• ID  : <code>{target_chat_id}</code>\n"
-            )
-        except Exception:
-            target_info_text = (
-                f"<u>**Current Target**</u>\n\n"
-                f"• ID  : <code>{target_chat_id}</code>\n"
-                f"(⚠️ Bot may not have access to retrieve the title)\n"
-            )
-    else:
-        target_info_text = "<u>**Current Target**</u>\n\n❌ No target is currently set.\nUse /target to set one.\n"
-
-    # Final reply
-    await message.reply(
-        f"<blockquote>⚙️ Settings Information  :</blockquote>\n\n"
-        f"{target_info_text}\n"
-        f"<u>**Filter Settings**</u>\n\n"
-        f"🔁 Replace: {replace}\n"
-        f"❌ Delete: {delete}\n"
-        f"📌 Auto Pin: {auto_pin}\n\n"
-        f"<u>**Message Types**</u>\n\n{type_status}"
-    )
 
 #========================= Start forward ==============================
 @app.on_message(filters.command("forward") & filters.private)
