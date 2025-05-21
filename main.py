@@ -565,7 +565,7 @@ async def reset_settings_callback(client, query: CallbackQuery):
                 "filters.replace": {},
                 "filters.delete": [],
                 "filters.types": default_types,
-                "auto_pin": True
+                "filters.auto_pin": True
             }
         },
         upsert=True
