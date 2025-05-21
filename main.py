@@ -20,7 +20,7 @@ from base64 import b64encode, b64decode
 from pyrogram.errors import *
 from pyrogram.types import User, Message        
 from pyrogram.types.messages_and_media import message
-from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI, OWNER_ID
+from config import *
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from pyrogram.errors.exceptions.bad_request_400 import StickerEmojiInvalid
 
@@ -39,7 +39,6 @@ image_list = [
     "https://www.pixelstalk.net/wp-content/uploads/2025/03/A-breathtaking-image-of-a-lion-roaring-proudly-atop-a-rocky-outcrop-with-dramatic-clouds-and-rays-of-sunlight-breaking-through-2.webp"
     ]
 #======================== Force Subscribe =======================
-FORCE_CHANNEL = -1002458623455
 async def force_subscribe(client, message):
     try:
         user = await client.get_chat_member(FORCE_CHANNEL, message.from_user.id)
@@ -688,9 +687,6 @@ async def filters_help_callback(client, query: CallbackQuery):
 @app.on_callback_query(filters.regex("^done$"))
 async def done(_, query: CallbackQuery):
     await query.message.edit("✅ Filters saved successfully.")
-
-#==================== Globle log channel ============================
-OWNER_LOG_GROUP = -1002512261473
 #========================= Start forward ==============================
 @app.on_message(filters.command("forward") & filters.private)
 async def forward_command(client, message):
