@@ -61,13 +61,16 @@ def is_authorized(user_id):
 #======================== Premium Users Auth system  =======================
 @app.on_message(filters.command("manage") & filters.user(OWNER_ID))
 async def manage_users(_, m):
-    btn = [
-        [InlineKeyboardButton("➕ Add User", callback_data="add_user"),
-         InlineKeyboardButton("➖ Remove User", callback_data="rem_user")],
-        [InlineKeyboardButton("🗑️ Clear All Users", callback_data="clear_users"),
-         InlineKeyboardButton("👥 Show All Users", callback_data="show_users")]
-    ]
-    await m.reply("🔧 Choose an action:", reply_markup=InlineKeyboardMarkup(btn))
+    btn = InlineKeyboardMarkup([
+        [
+            [InlineKeyboardButton("➕ Add User", callback_data="add_user"),
+             InlineKeyboardButton("➖ Remove User", callback_data="rem_user")],
+            [InlineKeyboardButton("🗑️ Clear All Users", callback_data="clear_users"),
+             InlineKeyboardButton("👥 Show All Users", callback_data="show_users")]
+        ]
+    ])
+
+    await m.reply("🔧 Choose an action:", reply_markup=btn)
 
 # ===== Handle Add User =====
 @app.on_callback_query(filters.regex("^add_user$"))
