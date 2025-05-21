@@ -396,9 +396,15 @@ async def edit_delete(client: ListenClient, query: CallbackQuery):
 
 @app.on_callback_query(filters.regex("^toggle_autopin$"))
 async def toggle_autopin(_, query: CallbackQuery):
-    user = users.find_one({"user_id": query.from_user.id})
-    current = user.get("auto_pin", False)
-    users.update_one({"user_id": query.from_user.id}, {"$set": {"auto_pin": not current}})
+    user_id = query.from_user.id
+    user = users.find_one({"user_id": user_id})
+    filters_data = user.get("filters", {})
+    current = filters_data.get("auto_pin", False)
+
+    # Toggle the value inside filters.auto_pin
+    filters_data["auto_pin"] = not current
+    users.update_one({"user_id": user_id}, {"$set": {"filters.auto_pin": not current}})
+
     status = "✅ Enabled" if not current else "❌ Disabled"
     await query.answer(f"Auto Pin: {status}", show_alert=True)
 
