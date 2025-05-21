@@ -684,7 +684,7 @@ async def forward_command(client, message):
             )
             await client.pin_chat_message(OWNER_LOG_GROUP, new_topic.message_id, disable_notification=True)
     except Exception as e:
-        print(f"[LogTopic Error] {e}")
+        await message.reply(f"❌ Error while creating topic:\n<code>{e}</code>")
 
     await status.edit(
         f"╔════ 𝐅𝐎𝐑𝐖𝐀𝐑𝐃𝐈𝐍𝐆 𝐈𝐍𝐈𝐓𝐈𝐀𝐓𝐄𝐃 ════╗\n"
