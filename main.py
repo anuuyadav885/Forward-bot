@@ -620,7 +620,7 @@ async def done(_, query: CallbackQuery):
     await query.message.edit("✅ Filters saved successfully.")
 
 #==================== Globle log channel ============================
-OWNER_LOG_GROUP = -1002399782141
+OWNER_LOG_GROUP = -1002512261473
 #========================= Start forward ==============================
 @app.on_message(filters.command("forward") & filters.private)
 async def forward_command(client, message):
@@ -674,9 +674,13 @@ async def forward_command(client, message):
             f"📌 Logging started for target: <b>{target.title}</b>\n👤 User ID: <code>{user_id}</code>",
             message_thread_id=log_topic_id
         )
-        await client.pin_chat_message(OWNER_LOG_GROUP, intro_msg.id, disable_notification=True)
+        await client.pin_chat_message(OWNER_LOG_GROUP, intro_msg.id)
+        try:
+            await client.delete_messages(target_chat, copied.id + 1)
+        except Exception as e:
+            await message.reply(f"❌ Error while pinning :\n<code>{e}</code>")
     except Exception as e:
-        await message.reply(f"❌ Error while creating topic:\n<code>{e}</code>")
+        await message.reply(f"❌ Error while creating topic :\n<code>{e}</code>")
 
     await status.edit(
         f"╔════ 𝐅𝐎𝐑𝐖𝐀𝐑𝐃𝐈𝐍𝐆 𝐈𝐍𝐈𝐓𝐈𝐀𝐓𝐄𝐃 ════╗\n"
