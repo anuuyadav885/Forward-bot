@@ -41,10 +41,10 @@ async def set_bot_commands(client, message):
     commands = [
         BotCommand("start", "🚀 Start the bot"),
         BotCommand("stop", "🛑 Stop forwarding"),
-        BotCommand("manage", "👤 Premium User Management Panel"),
         BotCommand("user_id", "🆔 Show your Telegram ID"),
         BotCommand("forward", "📤 Forward messages"),
         BotCommand("settings", "🔍 Change settings"),
+         BotCommand("manage", "👤 Premium User Management Panel"),
         BotCommand("broadcast", "📢 Broadcast a message to users"),
     ]
 
