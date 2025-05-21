@@ -56,9 +56,10 @@ async def force_subscribe(client, message):
             chat_id=message.chat.id,
             photo=random_image,
             caption=(
-                f"🔒 𝐇𝐞𝐲 {message.from_user.mention}!\n\n"
-                f"𝗬𝗼𝘂 𝗺𝘂𝘀𝘁 𝗷𝗼𝗶𝗻 𝗼𝘂𝗿 𝗰𝗵𝗮𝗻𝗻𝗲𝗹 𝘁𝗼 𝘂𝘀𝗲 𝘁𝗵𝗶𝘀 𝗯𝗼𝘁.\n\n"
-                f"𝗝𝗼𝗶𝗻 𝗻𝗼𝘄 𝗮𝗻𝗱 𝗰𝗹𝗶𝗰𝗸 𝘁𝗵𝗲 𝗯𝘂𝘁𝘁𝗼𝗻 𝗯𝗲𝗹𝗼𝘄 𝘁𝗼 𝘃𝗲𝗿𝗶𝗳𝘆!"
+               f"🔒 𝗛𝗲𝘆 {message.from_user.mention} !\n\n"
+                f"🔔 𝗣𝗹𝗲𝗮𝘀𝗲 𝗷𝗼𝗶𝗻 𝗼𝘂𝗿 𝗼𝗳𝗳𝗶𝗰𝗶𝗮𝗹 𝗰𝗵𝗮𝗻𝗻𝗲𝗹 𝘁𝗼 𝗰𝗼𝗻𝘁𝗶𝗻𝘂𝗲 𝘂𝘀𝗶𝗻𝗴 𝘁𝗵𝗶𝘀 𝗽𝗿𝗲𝗺𝗶𝘂𝗺 𝗯𝗼𝘁.\n\n"
+                f"📢 𝗜𝗻𝘀𝗶𝗱𝗲: 𝗧𝗶𝗽𝘀, 𝗨𝗽𝗱𝗮𝘁𝗲𝘀, 𝗔𝗻𝗻𝗼𝘂𝗻𝗰𝗲𝗺𝗲𝗻𝘁𝘀 & 𝗠𝗼𝗿𝗲\n\n"
+                f"👉 𝗧𝗮𝗽 𝗯𝗲𝗹𝗼𝘄 𝘁𝗼 𝗷𝗼𝗶𝗻 𝗮𝗻𝗱 𝘁𝗵𝗲𝗻 𝗰𝗹𝗶𝗰𝗸 ✅ 𝗜'𝘃𝗲 𝗝𝗼𝗶𝗻𝗲𝗱"
             ),
             reply_markup=InlineKeyboardMarkup([[
                 InlineKeyboardButton("📢 Join Channel", url=invite_link.invite_link),
@@ -75,7 +76,7 @@ async def recheck_subscription(client, callback_query):
     message = callback_query.message
     result = await force_subscribe(client, callback_query)
     if result is True:
-        await callback_query.message.edit("✅ You're verified. You can now use the bot.")
+        await callback_query.message.edit("✅ 𝗬𝗼𝘂'𝘃𝗲 𝗯𝗲𝗲𝗻 𝘀𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 𝘃𝗲𝗿𝗶𝗳𝗶𝗲𝗱!\n\n✨ You can now enjoy full access to this premium bot.")
     else:
         await callback_query.answer("❌ Still not joined!", show_alert=True)
 
