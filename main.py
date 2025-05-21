@@ -59,47 +59,70 @@ def is_authorized(user_id):
     return auth_col.find_one({"_id": user_id}) or user_id == OWNER_ID
 
 #======================== Add user in premium =======================
-@app.on_message(filters.command("add") & filters.user(OWNER_ID))
-async def add_premium(_, m):
-    if len(m.command) < 2:
-        return await m.reply("<blockquote>⚠️ Usage: /add [user_id]</blockquote>")
-    try:
-        uid = int(m.command[1])
-        if not auth_col.find_one({"_id": uid}):
-            auth_col.insert_one({"_id": uid})
-            await m.reply("<blockquote>✅ User Added Successsfully.</blockquote>")
-        else:
-            await m.reply("<blockquote>ℹ️ User Already Exists.</blockquote>")
-    except:
-        await m.reply("<blockquote>❌ Invalid ID format.</blockquote>")
+@app.on_message(filters.command("manage") & filters.user(OWNER_ID))
+async def manage_users(client, message):
+    await message.reply(
+        "<b>👤 Manage Premium Users</b>",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("➕ Add", callback_data="add_user")],
+            [InlineKeyboardButton("➖ Remove", callback_data="rem_user")],
+            [InlineKeyboardButton("🗑️ Clear All", callback_data="clear_users")],
+            [InlineKeyboardButton("👥 Show All", callback_data="show_users")]
+        ])
+)
+@app.on_callback_query(filters.regex("add_user"))
+async def add_user_cb(client, query):
+    await query.message.edit("📥 Send the user ID to **add**:")
+    try:
+        r = await client.listen(query.message.chat.id, timeout=60)
+        await r.delete()
+        uid = int(r.text.strip())
 
-#====================== Remove users from premium =========================
-@app.on_message(filters.command("rem") & filters.user(OWNER_ID))
-async def remove_user(_, m):
-    if len(m.command) < 2:
-        return await m.reply("<blockquote>⚠️ Usage: /rem [user_id]</blockquote>")
-    try:
-        uid = int(m.command[1])
-        result = auth_col.delete_one({"_id": uid})
-        await m.reply("<blockquote>✅ User Removed Successfully.</blockquote>" if result.deleted_count else "<blockquote>❌ User not found.</blockquote>")
-    except:
-        await m.reply("<blockquote>❌ Invalid ID format.</blockquote>")
+        if not auth_col.find_one({"_id": uid}):
+            auth_col.insert_one({"_id": uid})
+            await query.message.edit("✅ User added successfully.")
+            try:
+                await client.send_message(uid, "✅ You have been granted Premium Access!")
+            except:
+                pass
+        else:
+            await query.message.edit("ℹ️ User already exists.")
+    except:
+        await query.message.edit("❌ Invalid ID or timeout.")
 
-#===================== Clear all Premium users =========================
-@app.on_message(filters.command("clear") & filters.user(OWNER_ID))
-async def clear_all_users(_, m):
-    result = auth_col.delete_many({})
-    await m.reply(f"<blockquote>✅ All users deleted.\nTotal removed: {result.deleted_count}</blockquote>")
+@app.on_callback_query(filters.regex("rem_user"))
+async def remove_user_cb(client, query):
+    await query.message.edit("📤 Send the user ID to **remove**:")
+    try:
+        r = await client.listen(query.message.chat.id, timeout=60)
+        await r.delete()
+        uid = int(r.text.strip())
+        result = auth_col.delete_one({"_id": uid})
 
-#======================== Premium users info =====================
-@app.on_message(filters.command("users") & filters.user(OWNER_ID))
-async def show_users(_, m):
-    users = list(auth_col.find())
-    if not users:
-        return await m.reply("<blockquote>🚫 No authorized users found.</blockquote>")
-    user_list = "\n".join(str(u["_id"]) for u in users)
-    await m.reply(f"<blockquote>👥 Authorized Users:</blockquote>\n\n{user_list}")
+        if result.deleted_count:
+            await query.message.edit("✅ User removed successfully.")
+            try:
+                await client.send_message(uid, "⚠️ Your Premium Access has been revoked.")
+            except:
+                pass
+        else:
+            await query.message.edit("❌ User not found.")
+    except:
+        await query.message.edit("❌ Invalid ID or timeout.")
 
+@app.on_callback_query(filters.regex("clear_users"))
+async def clear_users_cb(client, query):
+    result = auth_col.delete_many({})
+    await query.message.edit(f"✅ All users removed. Total: {result.deleted_count}")
+
+@app.on_callback_query(filters.regex("show_users"))
+async def show_users_cb(client, query):
+    users = list(auth_col.find())
+    if not users:
+        return await query.message.edit("🚫 No authorized users found.")
+    user_list = "\n".join(str(u["_id"]) for u in users)
+    await query.message.edit(f"👥 <b>Authorized Users:</b>\n\n{user_list}")
+    
 #========================== For broadcast ====================================
 def add_user(user_id):
     if not users_collection.find_one({"_id": user_id}):
