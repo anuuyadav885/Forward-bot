@@ -34,6 +34,51 @@ users_collection = db["busers"]
 auth_col = db["auth_users"]
 cancel_flags = {}
 
+#===================== Random Choose Image =======================
+image_list = [
+    "https://www.pixelstalk.net/wp-content/uploads/2025/03/A-breathtaking-image-of-a-lion-roaring-proudly-atop-a-rocky-outcrop-with-dramatic-clouds-and-rays-of-sunlight-breaking-through-2.webp"
+    ]
+#======================== Force Subscribe =======================
+FORCE_CHANNEL = -1002458623455
+async def force_subscribe(client, message):
+    try:
+        user = await client.get_chat_member(FORCE_CHANNEL, message.from_user.id)
+        if user.status in ("left", "kicked"):
+            raise UserNotParticipant
+    except UserNotParticipant:
+        try:
+            invite_link = await client.create_chat_invite_link(FORCE_CHANNEL)
+        except ChatAdminRequired:
+            return await message.reply("❌ Bot is not admin in the force channel.")
+
+        random_image = random.choice(image_list)
+        return await client.send_photo(
+            chat_id=message.chat.id,
+            photo=random_image,
+            caption=(
+                f"🔒 𝐇𝐞𝐲 {message.from_user.mention}!\n\n"
+                f"𝗬𝗼𝘂 𝗺𝘂𝘀𝘁 𝗷𝗼𝗶𝗻 𝗼𝘂𝗿 𝗰𝗵𝗮𝗻𝗻𝗲𝗹 𝘁𝗼 𝘂𝘀𝗲 𝘁𝗵𝗶𝘀 𝗯𝗼𝘁.\n\n"
+                f"𝗝𝗼𝗶𝗻 𝗻𝗼𝘄 𝗮𝗻𝗱 𝗰𝗹𝗶𝗰𝗸 𝘁𝗵𝗲 𝗯𝘂𝘁𝘁𝗼𝗻 𝗯𝗲𝗹𝗼𝘄 𝘁𝗼 𝘃𝗲𝗿𝗶𝗳𝘆!"
+            ),
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("📢 Join Channel", url=invite_link.invite_link),
+                InlineKeyboardButton("✅ I've Joined", callback_data="checksub")
+            ]])
+        )
+    except Exception as e:
+        print(f"[ForceSubscribe Error] {e}")
+        return await message.reply("⚠️ An error occurred while checking subscription.")
+    return True
+
+@app.on_callback_query(filters.regex("checksub"))
+async def recheck_subscription(client, callback_query):
+    message = callback_query.message
+    result = await force_subscribe(client, callback_query)
+    if result is True:
+        await callback_query.message.edit("✅ You're verified. You can now use the bot.")
+    else:
+        await callback_query.answer("❌ Still not joined!", show_alert=True)
+
 #======================= Set bot commands ========================
 
 @app.on_message(filters.command("set") & filters.user(OWNER_ID))
@@ -287,9 +332,6 @@ def extract_ids_from_link(link):
     return chat_id, msg_id
 
 #================================ Start command to start bot ============================
-image_list = [
-    "https://www.pixelstalk.net/wp-content/uploads/2025/03/A-breathtaking-image-of-a-lion-roaring-proudly-atop-a-rocky-outcrop-with-dramatic-clouds-and-rays-of-sunlight-breaking-through-2.webp"
-    ]
 class Data:
     START = (
         "🌟 𝐇𝐞𝐲  {0} , 𝐖𝐄𝐋𝐂𝐎𝐌𝐄  !\n\n"
@@ -297,6 +339,9 @@ class Data:
 # Define the start command handler
 @app.on_message(filters.command("start"))
 async def start(client: Client, msg: Message):
+    result = await force_subscribe(client, msg)
+    if result is not True:
+        return
     user = await client.get_me()
     mention = user.mention
     random_image = random.choice(image_list)
