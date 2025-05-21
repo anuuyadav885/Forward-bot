@@ -75,15 +75,26 @@ async def force_subscribe(client, message):
 async def recheck_subscription(client, callback_query):
     message = callback_query.message
     result = await force_subscribe(client, callback_query)
-    if result is True:
-        await callback_query.message.edit("✅ 𝗬𝗼𝘂'𝘃𝗲 𝗯𝗲𝗲𝗻 𝘀𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 𝘃𝗲𝗿𝗶𝗳𝗶𝗲𝗱!\n\n✨ You can now enjoy full access to this premium bot.")
-    else:
-        await callback_query.answer("❌ Still not joined!", show_alert=True)
 
+    if result is True:
+        try:
+            await callback_query.message.edit(
+                "✅ 𝗬𝗼𝘂'𝘃𝗲 𝗯𝗲𝗲𝗻 𝘀𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 𝘃𝗲𝗿𝗶𝗳𝗶𝗲𝗱!\n\n✨ You can now enjoy full access to this premium bot."
+            )
+        except Exception:
+            pass
+    else:
+        # Don't use await callback_query.message.edit and answer together
+        await callback_query.answer(
+            "❌ You still haven't joined the required channel!", show_alert=True
+        )
 #======================= Set bot commands ========================
 
 @app.on_message(filters.command("set") & filters.user(OWNER_ID))
 async def set_bot_commands(client, message):
+    result = await force_subscribe(client, message)
+    if result is not True:
+        return
     commands = [
         BotCommand("start", "🚀 Start the bot"),
         BotCommand("stop", "🛑 Stop forwarding"),
@@ -106,6 +117,9 @@ from pyromod.listen import Client as ListenClient
 
 @app.on_message(filters.command("manage") & filters.user(OWNER_ID))
 async def manage_users(client: ListenClient, message):
+    result = await force_subscribe(client, message)
+    if result is not True:
+        return
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton("➕ Add User", callback_data="add_user"),
          InlineKeyboardButton("➖ Remove User", callback_data="remove_user")],
@@ -203,6 +217,9 @@ broadcast_requests = {}
 
 @app.on_message(filters.command("broadcast") & filters.user(OWNER_ID))
 async def broadcast_handler(bot, message: Message):
+    result = await force_subscribe(bot, message)
+    if result is not True:
+        return
     if not message.reply_to_message:
         return await message.reply_text("Reply to a message to broadcast it.")
 
@@ -283,9 +300,6 @@ VALID_EMOJIS = ["😂", "🔥", "🎉", "🥳", "💯", "😎", "😅", "🙏", 
 
 @app.on_message(filters.text, group=-1)
 async def auto_react(bot, message):
-    result = await force_subscribe(bot, message)
-    if result is not True:
-        return
     if message.edit_date or not message.from_user:
         return  # Skip edited messages or anonymous/channel messages
     add_user(message.from_user.id)  # ✅ Auto add user to DB
@@ -393,6 +407,7 @@ async def start(client: Client, msg: Message):
             "• 📌 Auto-pinning + media type filters\n"
             "• 🛠️ Custom word replacement & deletion\n\n"
             "<b>🤝 Want access?</b>\n"
+            "<b> Use /id & Send to owner</b>\n"
             "<blockquote>Contact the admin to request your premium slot:</blockquote>",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("📞 Contact Admin", url="https://t.me/Dc5txt_bot")]
@@ -440,7 +455,7 @@ caption = (
 
 @app.on_message(filters.command("settings") & filters.private)
 async def show_filter_menu(client: ListenClient, message):
-    result = await force_subscribe(client, ListenClient)
+    result = await force_subscribe(client, message)
     if result is not True:
         return
     user_id = message.from_user.id
