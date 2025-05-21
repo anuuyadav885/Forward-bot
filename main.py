@@ -60,10 +60,10 @@ async def force_subscribe(client, message):
                f"🔒 𝗛𝗲𝘆 {message.from_user.mention} !\n\n"
                 f"🔔 𝗣𝗹𝗲𝗮𝘀𝗲 𝗷𝗼𝗶𝗻 𝗼𝘂𝗿 𝗼𝗳𝗳𝗶𝗰𝗶𝗮𝗹 𝗰𝗵𝗮𝗻𝗻𝗲𝗹 𝘁𝗼 𝗰𝗼𝗻𝘁𝗶𝗻𝘂𝗲 𝘂𝘀𝗶𝗻𝗴 𝘁𝗵𝗶𝘀 𝗽𝗿𝗲𝗺𝗶𝘂𝗺 𝗯𝗼𝘁.\n\n"
                 f"📢 𝗜𝗻𝘀𝗶𝗱𝗲: 𝗧𝗶𝗽𝘀, 𝗨𝗽𝗱𝗮𝘁𝗲𝘀, 𝗔𝗻𝗻𝗼𝘂𝗻𝗰𝗲𝗺𝗲𝗻𝘁𝘀 & 𝗠𝗼𝗿𝗲\n\n"
-                f"📢 𝗝𝗼𝗶𝗻 {channel_name} 𝗮𝗻𝗱 𝗰𝗹𝗶𝗰𝗸 𝘁𝗵𝗲 𝗯𝘂𝘁𝘁𝗼𝗻 𝗯𝗲𝗹𝗼𝘄!"
+                f"📢 𝗝𝗼𝗶𝗻 <u>**{channel_name}**</u> 𝗮𝗻𝗱 𝗰𝗹𝗶𝗰𝗸 𝘁𝗵𝗲 𝗯𝘂𝘁𝘁𝗼𝗻 𝗯𝗲𝗹𝗼𝘄!"
             ),
             reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("📢 Join {channel_name}", url=invite_link.invite_link),
+                InlineKeyboardButton(f'📢 Join {channel_name}', url=invite_link.invite_link),
                 InlineKeyboardButton("✅ I've Joined", callback_data="checksub")
             ]])
         )
