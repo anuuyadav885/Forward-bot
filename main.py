@@ -61,15 +61,16 @@ def is_authorized(user_id):
 #======================== Add user in premium =======================
 @app.on_message(filters.command("manage") & filters.user(OWNER_ID))
 async def manage_users(client, message):
-    await message.reply(
-        "<b>👤 Manage Premium Users</b>",
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("➕ Add", callback_data="add_user")],
-            [InlineKeyboardButton("➖ Remove", callback_data="rem_user")],
-            [InlineKeyboardButton("🗑️ Clear All", callback_data="clear_users")],
-            [InlineKeyboardButton("👥 Show All", callback_data="show_users")]
-        ])
-)
+    await message.reply(
+        "<b>👤 Manage Premium Users</b>",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("➕ Add", callback_data="add_user"),
+             InlineKeyboardButton("➖ Remove", callback_data="rem_user")],
+            [InlineKeyboardButton("🗑️ Clear All", callback_data="clear_users"),
+             InlineKeyboardButton("👥 Show All", callback_data="show_users")]
+        ])
+    )
+
 @app.on_callback_query(filters.regex("add_user"))
 async def add_user_cb(client, query):
     await query.message.edit("📥 Send the user ID to **add**:")
