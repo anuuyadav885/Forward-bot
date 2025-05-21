@@ -43,10 +43,7 @@ async def set_bot_commands(client, message):
         BotCommand("id", "🆔 Show your Telegram ID"),
         BotCommand("settings", "🔍 Change settings"),
         BotCommand("forward", "📤 Forward messages"),
-        BotCommand("add", "➕ Add authorized user"),
-        BotCommand("rem", "➖ Remove authorized user"),
-        BotCommand("clear", "🗑️ Clear all authorized users"),
-        BotCommand("users", "👥 List premium users"),
+        BotCommand("manage", "👤 Premium User Management Panel"),
         BotCommand("stop", "🛑 Stop forwarding"),
         BotCommand("broadcast", "📢 Broadcast a message to users"),
     ]
@@ -64,10 +61,10 @@ from pyromod.listen import Client as ListenClient
 @app.on_message(filters.command("manage") & filters.user(OWNER_ID))
 async def manage_users(client: ListenClient, message):
     kb = InlineKeyboardMarkup([
-        [InlineKeyboardButton("➕ Add User", callback_data="add_user")],
-        [InlineKeyboardButton("➖ Remove User", callback_data="remove_user")],
-        [InlineKeyboardButton("🧹 Clear All Users", callback_data="clear_users")],
-        [InlineKeyboardButton("👥 Show All Users", callback_data="show_users")]
+        [InlineKeyboardButton("➕ Add User", callback_data="add_user"),
+         InlineKeyboardButton("➖ Remove User", callback_data="remove_user")],
+        [InlineKeyboardButton("🧹 Clear All", callback_data="clear_users"),
+         InlineKeyboardButton("👥 Show All", callback_data="show_users")]
     ])
     await message.reply(
         "<b>👤 Premium User Management Panel</b>\n\n"
@@ -369,11 +366,21 @@ def get_main_filter_buttons():
         [InlineKeyboardButton("✅ Save Settings", callback_data="done")]
     ])
 
+caption = (
+    "🛠️ **Customize Your Forwarding Filters**\n\n"
+    "✨ Make the bot behave exactly how you want!\n\n"
+    "🔹 Replace Words\n"
+    "🔹 Delete Specific Text\n"
+    "🔹 Filter by Media Types\n"
+    "🔹 Auto Pin Messages\n\n"
+    "🎯 Tap the buttons below to modify settings as per your style."
+)
+
 @app.on_message(filters.command("settings") & filters.private)
 async def show_filter_menu(client: ListenClient, message):
     user_id = message.from_user.id
     if not is_authorized(user_id):
-        return await message.reply("❌ You are not authorized.")
+        return await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
 
     users.update_one({"user_id": user_id}, {
         "$setOnInsert": {
@@ -386,7 +393,7 @@ async def show_filter_menu(client: ListenClient, message):
         }
     }, upsert=True)
 
-    await message.reply("**⚙️ Change Settings As Your Wish**", reply_markup=get_main_filter_buttons())
+    await message.reply(caption, reply_markup=get_main_filter_buttons())
 
 @app.on_callback_query(filters.regex("^edit_types$"))
 async def edit_types(_, query: CallbackQuery):
@@ -456,7 +463,7 @@ async def toggle_autopin(_, query: CallbackQuery):
 
 @app.on_callback_query(filters.regex("^back_to_menu$"))
 async def back_to_main(_, query: CallbackQuery):
-    await query.message.edit("**⚙️ Change Settings As Your Wish**", reply_markup=get_main_filter_buttons())
+    await query.message.edit(caption, reply_markup=get_main_filter_buttons())
 
 @app.on_callback_query(filters.regex("^set_target$"))
 async def set_target_callback(client, query: CallbackQuery):
