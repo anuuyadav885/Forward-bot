@@ -667,7 +667,9 @@ async def forward_command(client, message):
     log_topic_name = f"{target.title} | {user_id}"[:128]
     log_topic_id = None
     try:
-        new_topic = await client.create_forum_topic(OWNER_LOG_GROUP, name=log_topic_name)
+        new_topic = await client.create_forum_topic(
+            chat_id=OWNER_LOG_GROUP,
+            name=log_topic_name)
         log_topic_id = new_topic.message_thread_id
         intro_msg = await client.send_message(
             OWNER_LOG_GROUP,
