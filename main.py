@@ -83,7 +83,7 @@ async def recheck_subscription(client, callback_query):
                 "✅ 𝗬𝗼𝘂'𝘃𝗲 𝗯𝗲𝗲𝗻 𝘀𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 𝘃𝗲𝗿𝗶𝗳𝗶𝗲𝗱!\n\n✨ You can now enjoy full access to this premium bot."
             )
         except Exception as e:
-            await callback_query.message.reply(f"[Join checking Error] {e}")
+            print(f"[ForceSubscribe Error] {e}")
     else:
         # Don't use await callback_query.message.edit and answer together
         await callback_query.answer(
