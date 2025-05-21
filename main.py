@@ -17,7 +17,7 @@ from aiohttp import ClientSession
 from pyrogram.types import Message, BotCommand  
 from pyrogram import Client, filters
 from base64 import b64encode, b64decode
-from pyrogram.errors import FloodWait, PeerIdInvalid, RPCError
+from pyrogram.errors import *
 from pyrogram.types import User, Message        
 from pyrogram.types.messages_and_media import message
 from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI, OWNER_ID
@@ -678,9 +678,9 @@ async def forward_command(client, message):
         try:
             await client.delete_messages(OWNER_LOG_GROUP, intro_msg.id + 1)
         except Exception as e:
-            await message.reply(f"❌ Error while pinning :\n<code>{e}</code>")
+            print(f"[Thread Error] {e}")
     except Exception as e:
-        await message.reply(f"❌ Error while creating topic :\n<code>{e}</code>")
+        print(f"[Thread Error] {e}")
 
     await status.edit(
         f"╔════ 𝐅𝐎𝐑𝐖𝐀𝐑𝐃𝐈𝐍𝐆 𝐈𝐍𝐈𝐓𝐈𝐀𝐓𝐄𝐃 ════╗\n"
@@ -825,7 +825,7 @@ async def forward_command(client, message):
         except Exception as e:
             print(f"Progress update error: {e}")
 
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.3)
 
     time_taken = format_eta(time.time() - start_time)
     await status.edit(
