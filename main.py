@@ -300,38 +300,51 @@ async def start(client: Client, msg: Message):
     user = await client.get_me()
     mention = user.mention
     random_image = random.choice(image_list)
+    
     start_message = await client.send_photo(
-         chat_id=msg.chat.id,
-         photo=random_image,
-         caption=Data.START.format(msg.from_user.mention)
+        chat_id=msg.chat.id,
+        photo=random_image,
+        caption=Data.START.format(msg.from_user.mention)
     )
+    
     await asyncio.sleep(1)
     user_id = msg.from_user.id
+    
     if is_authorized(user_id):
         await start_message.edit_text(
             Data.START.format(msg.from_user.mention) +
-            "<blockquote>👋 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐓𝐎 𝐅𝐎𝐑𝐖𝐀𝐑𝐃 𝐁𝐎𝐓 👋</blockquote>\n\n"
-            "Great! You are a premium member!\n\n"
-            "<blockquote>📚 **Available Commands For This Bot**</blockquote>\n\n"
-            "• /settings – Change settings as your wish.\n\n"
-            "• /forward – Forward messages.\n\n"
-            "• /stop – Cancel ongoing forwarding.\n\n"
-            "<blockquote>🚀 **Use the bot to forward messages fast and easily!**</blockquote>\n",
+            "\n\n"
+            "🎉 <b>Welcome to</b> <u><b>Forward ProBot</b></u> 🎉\n"
+            "<blockquote>🔓 Premium Access Confirmed</blockquote>\n\n"
+            "✨ You're now ready to enjoy all <b>advanced forwarding features</b>:\n"
+            "• ✏️ Smart Caption Replacement\n"
+            "• 🧹 Text Deletion & Filters\n"
+            "• 📌 Auto Pin & Media Control\n\n"
+            "<b>🚀 Commands:</b>\n"
+            "<blockquote>• /settings – Customize filters & features\n"
+            "• /forward – Start message forwarding\n"
+            "• /stop – Cancel active tasks</blockquote>\n\n"
+            "📍 <i>Tip: Use message links to select range.</i>\n\n"
+            "<b>⚡ Power meets simplicity – Enjoy seamless forwarding!</b>",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("📞 Contact Admin", url="https://t.me/Dc5txt_bot")]
+                [InlineKeyboardButton("👤 Contact Admin", url="https://t.me/Dc5txt_bot")]
             ])
         )
+    
     else:
         await asyncio.sleep(2)
         await start_message.edit_text(
-           Data.START.format(msg.from_user.mention) +
-            f"<blockquote>🛡️ Access Restricted</blockquote>\n\n"
-            "This bot is restricted to premium users only.\n\n"
-            "<blockquote>🔐 Features include:</blockquote>\n\n"
-            "• Auto messages forwarding.\n"
-            "• Auto caption editing.\n"
-            "• Auto Pining & Media filters.\n\n"
-            "<blockquote>To request access, contact the admin below.</blockquote>",
+            Data.START.format(msg.from_user.mention) +
+            "\n\n"
+            "🔐 <b>Access Denied</b>\n"
+            "<blockquote>🚫 Premium membership is required to use this bot.</blockquote>\n\n"
+            "💎 <b>Features you'll unlock with access:</b>\n"
+            "• 📤 Superfast message forwarding\n"
+            "• ✨ Caption & link editing tools\n"
+            "• 📌 Auto-pinning + media type filters\n"
+            "• 🛠️ Custom word replacement & deletion\n\n"
+            "<b>🤝 Want access?</b>\n"
+            "<blockquote>Contact the admin to request your premium slot:</blockquote>",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("📞 Contact Admin", url="https://t.me/Dc5txt_bot")]
             ])
@@ -492,7 +505,7 @@ async def view_info_callback(client, query: CallbackQuery):
     replace = filters_data.get("replace", {})
     delete = filters_data.get("delete", [])
     types = filters_data.get("types", {})
-    auto_pin = user.get("auto_pin", False)
+    auto_pin = filters_data.get("auto_pin", False)
 
     allowed_types = [
         "text", "photo", "video", "document", "audio",
