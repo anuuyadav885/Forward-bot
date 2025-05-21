@@ -529,7 +529,7 @@ async def view_info_callback(client, query: CallbackQuery):
                 f"(⚠️ Bot may not have access to retrieve the title)\n"
             )
     else:
-        target_info_text = "<u>**Current Target**</u>\n\n❌ No target is currently set.\nUse /target to set one.\n"
+        target_info_text = "<u>**Current Target**</u>\n\n❌ No target is currently set.\nUse 🎯 Set Target button to set one.\n"
 
     await query.message.edit(
         f"<blockquote>⚙️ Settings Information  :</blockquote>\n\n"
@@ -633,7 +633,7 @@ async def forward_command(client, message):
     user = users.find_one({"user_id": user_id})
     target_chat = user.get("target_chat") if user else None
     if not target_chat:
-        return await message.reply("<blockquote>❌ No target is set. Use /target to set one.</blockquote>")
+        return await message.reply("<blockquote>❌ No target is set. Use /settings (🎯 Set Target) to set one.</blockquote>")
 
     status = await message.reply("<blockquote>📩 Send the **start message link** from the source channel</blockquote>")
     try:
