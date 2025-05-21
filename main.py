@@ -58,71 +58,75 @@ async def set_bot_commands(client, message):
 def is_authorized(user_id):
     return auth_col.find_one({"_id": user_id}) or user_id == OWNER_ID
 
-#======================== Add user in premium =======================
+#======================== Premium Users Auth system  =======================
 @app.on_message(filters.command("manage") & filters.user(OWNER_ID))
-async def manage_users(client, message):
-    await message.reply(
-        "<b>👤 Manage Premium Users</b>",
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("➕ Add", callback_data="add_user"),
-             InlineKeyboardButton("➖ Remove", callback_data="rem_user")],
-            [InlineKeyboardButton("🗑️ Clear All", callback_data="clear_users"),
-             InlineKeyboardButton("👥 Show All", callback_data="show_users")]
-        ])
-    )
+async def manage_users(_, m):
+    btn = [
+        [InlineKeyboardButton("➕ Add User", callback_data="add_user"),
+         InlineKeyboardButton("➖ Remove User", callback_data="rem_user")],
+        [InlineKeyboardButton("🗑️ Clear All Users", callback_data="clear_users"),
+         InlineKeyboardButton("👥 Show All Users", callback_data="show_users")]
+    ]
+    await m.reply("🔧 Choose an action:", reply_markup=InlineKeyboardMarkup(btn))
 
-@app.on_callback_query(filters.regex("add_user"))
-async def add_user_cb(client, query):
-    await query.message.edit("📥 Send the user ID to **add**:")
-    try:
-        r = await client.listen(query.message.chat.id, timeout=60)
+# ===== Handle Add User =====
+@app.on_callback_query(filters.regex("^add_user$"))
+async def handle_add_user(client, cb):
+    await cb.message.edit("✍️ Send user ID to add (or type /cancel):")
+    try:
+        r = await client.listen(cb.from_user.id, timeout=60)
         await r.delete()
-        uid = int(r.text.strip())
-
+        if r.text.lower() == "/cancel":
+            return await cb.message.edit("❌ Cancelled.")
+        uid = int(r.text)
         if not auth_col.find_one({"_id": uid}):
             auth_col.insert_one({"_id": uid})
-            await query.message.edit("✅ User added successfully.")
+            await cb.message.edit(f"✅ User `{uid}` added successfully.")
             try:
-                await client.send_message(uid, "✅ You have been granted Premium Access!")
+                await client.send_message(uid, "🌟 You’ve been granted premium access.")
             except:
                 pass
         else:
-            await query.message.edit("ℹ️ User already exists.")
+            await cb.message.edit(f"ℹ️ User `{uid}` already exists.")
     except:
-        await query.message.edit("❌ Invalid ID or timeout.")
+        await cb.message.edit("❌ Invalid input or timeout.")
 
-@app.on_callback_query(filters.regex("rem_user"))
-async def remove_user_cb(client, query):
-    await query.message.edit("📤 Send the user ID to **remove**:")
+# ===== Handle Remove User =====
+@app.on_callback_query(filters.regex("^rem_user$"))
+async def handle_rem_user(client, cb):
+    await cb.message.edit("✍️ Send user ID to remove (or type /cancel):")
     try:
-        r = await client.listen(query.message.chat.id, timeout=60)
+        r = await client.listen(cb.from_user.id, timeout=60)
         await r.delete()
-        uid = int(r.text.strip())
+        if r.text.lower() == "/cancel":
+            return await cb.message.edit("❌ Cancelled.")
+        uid = int(r.text)
         result = auth_col.delete_one({"_id": uid})
-
         if result.deleted_count:
-            await query.message.edit("✅ User removed successfully.")
+            await cb.message.edit(f"✅ User `{uid}` removed.")
             try:
-                await client.send_message(uid, "⚠️ Your Premium Access has been revoked.")
+                await client.send_message(uid, "⚠️ Your premium access has been revoked.")
             except:
                 pass
         else:
-            await query.message.edit("❌ User not found.")
+            await cb.message.edit(f"❌ User `{uid}` not found.")
     except:
-        await query.message.edit("❌ Invalid ID or timeout.")
+        await cb.message.edit("❌ Invalid input or timeout.")
 
-@app.on_callback_query(filters.regex("clear_users"))
-async def clear_users_cb(client, query):
+# ===== Handle Clear Users =====
+@app.on_callback_query(filters.regex("^clear_users$"))
+async def handle_clear_all(client, cb):
     result = auth_col.delete_many({})
-    await query.message.edit(f"✅ All users removed. Total: {result.deleted_count}")
+    await cb.message.edit(f"🗑️ All users deleted.\nTotal removed: {result.deleted_count}")
 
-@app.on_callback_query(filters.regex("show_users"))
-async def show_users_cb(client, query):
+# ===== Handle Show Users =====
+@app.on_callback_query(filters.regex("^show_users$"))
+async def handle_show_all(client, cb):
     users = list(auth_col.find())
     if not users:
-        return await query.message.edit("🚫 No authorized users found.")
-    user_list = "\n".join(str(u["_id"]) for u in users)
-    await query.message.edit(f"👥 <b>Authorized Users:</b>\n\n{user_list}")
+        return await cb.message.edit("🚫 No authorized users.")
+    user_list = "\n".join([f"• `{u['_id']}`" for u in users])
+    await cb.message.edit(f"👥 Authorized Users:\n\n{user_list}")
     
 #========================== For broadcast ====================================
 def add_user(user_id):
