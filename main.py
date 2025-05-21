@@ -47,6 +47,8 @@ async def force_subscribe(client, message):
     except UserNotParticipant:
         try:
             invite_link = await client.create_chat_invite_link(FORCE_CHANNEL)
+            channel_info = await client.get_chat(FORCE_CHANNEL)
+            channel_name = f"{channel_info.title}"
         except ChatAdminRequired:
             return await message.reply("❌ Bot is not admin in the force channel.")
 
@@ -58,10 +60,10 @@ async def force_subscribe(client, message):
                f"🔒 𝗛𝗲𝘆 {message.from_user.mention} !\n\n"
                 f"🔔 𝗣𝗹𝗲𝗮𝘀𝗲 𝗷𝗼𝗶𝗻 𝗼𝘂𝗿 𝗼𝗳𝗳𝗶𝗰𝗶𝗮𝗹 𝗰𝗵𝗮𝗻𝗻𝗲𝗹 𝘁𝗼 𝗰𝗼𝗻𝘁𝗶𝗻𝘂𝗲 𝘂𝘀𝗶𝗻𝗴 𝘁𝗵𝗶𝘀 𝗽𝗿𝗲𝗺𝗶𝘂𝗺 𝗯𝗼𝘁.\n\n"
                 f"📢 𝗜𝗻𝘀𝗶𝗱𝗲: 𝗧𝗶𝗽𝘀, 𝗨𝗽𝗱𝗮𝘁𝗲𝘀, 𝗔𝗻𝗻𝗼𝘂𝗻𝗰𝗲𝗺𝗲𝗻𝘁𝘀 & 𝗠𝗼𝗿𝗲\n\n"
-                f"👉 𝗧𝗮𝗽 𝗯𝗲𝗹𝗼𝘄 𝘁𝗼 𝗷𝗼𝗶𝗻 𝗮𝗻𝗱 𝘁𝗵𝗲𝗻 𝗰𝗹𝗶𝗰𝗸 ✅ 𝗜'𝘃𝗲 𝗝𝗼𝗶𝗻𝗲𝗱"
+                f"📢 𝗝𝗼𝗶𝗻 {channel_name} 𝗮𝗻𝗱 𝗰𝗹𝗶𝗰𝗸 𝘁𝗵𝗲 𝗯𝘂𝘁𝘁𝗼𝗻 𝗯𝗲𝗹𝗼𝘄!"
             ),
             reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("📢 Join Channel", url=invite_link.invite_link),
+                InlineKeyboardButton("📢 Join {channel_name}", url=invite_link.invite_link),
                 InlineKeyboardButton("✅ I've Joined", callback_data="checksub")
             ]])
         )
@@ -80,8 +82,8 @@ async def recheck_subscription(client, callback_query):
             await callback_query.message.edit(
                 "✅ 𝗬𝗼𝘂'𝘃𝗲 𝗯𝗲𝗲𝗻 𝘀𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 𝘃𝗲𝗿𝗶𝗳𝗶𝗲𝗱!\n\n✨ You can now enjoy full access to this premium bot."
             )
-        except Exception:
-            pass
+        except Exception as e:
+            await callback_query.message.reply(f"[Join checking Error] {e}")
     else:
         # Don't use await callback_query.message.edit and answer together
         await callback_query.answer(
