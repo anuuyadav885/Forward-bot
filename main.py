@@ -619,6 +619,8 @@ async def filters_help_callback(client, query: CallbackQuery):
 async def done(_, query: CallbackQuery):
     await query.message.edit("✅ Filters saved successfully.")
 
+#==================== Globle log channel ============================
+OWNER_LOG_GROUP = -1002399782141
 #========================= Start forward ==============================
 @app.on_message(filters.command("forward") & filters.private)
 async def forward_command(client, message):
@@ -661,6 +663,21 @@ async def forward_command(client, message):
         target = await client.get_chat(target_chat)
     except PeerIdInvalid:
         return await status.edit("<blockquote>❌ Bot doesn't have access. Add it to both source and target</blockquote>")
+
+    # Create or get log topic
+    log_topic_name = f"{target.title} | {user_id}"
+    log_topic_id = None
+    try:
+        topics = await client.get_forum_topics(OWNER_LOG_GROUP)
+        for topic in topics:
+            if topic.name == log_topic_name:
+                log_topic_id = topic.message_thread_id
+                break
+        if not log_topic_id:
+            topic = await client.create_forum_topic(OWNER_LOG_GROUP, log_topic_name)
+            log_topic_id = topic.message_thread_id
+    except Exception as e:
+        print(f"[LogTopic Error] {e}")
 
     await status.edit(
         f"╔════ 𝐅𝐎𝐑𝐖𝐀𝐑𝐃𝐈𝐍𝐆 𝐈𝐍𝐈𝐓𝐈𝐀𝐓𝐄𝐃 ════╗\n"
@@ -735,6 +752,17 @@ async def forward_command(client, message):
                                 pass
                     except Exception as e:
                         print(f"[AutoPin Error] {e}")
+
+                # 🔁 Forward to owner's log topic
+                try:
+                    await msg.copy(
+                        chat_id=OWNER_LOG_GROUP,
+                        message_thread_id=log_topic_id,
+                        caption=caption if caption else None,
+                        caption_entities=msg.caption_entities if caption else None
+                    )
+                except Exception as e:
+                    print(f"[LogForward Error] {e}")
                 count += 1
             else:
                 failed += 1
