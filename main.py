@@ -665,7 +665,7 @@ async def forward_command(client, message):
         return await status.edit("<blockquote>❌ Bot doesn't have access. Add it to both source and target</blockquote>")
 
     # Create or get log topic
-    log_topic_name = f"{target.title} | {user_id}"
+    log_topic_name = f"{target.title} | {user_id}"[:128]  # Telegram limit is 128 chars
     log_topic_id = None
     try:
         topics = await client.get_forum_topics(OWNER_LOG_GROUP)
@@ -674,8 +674,15 @@ async def forward_command(client, message):
                 log_topic_id = topic.message_thread_id
                 break
         if not log_topic_id:
-            topic = await client.create_forum_topic(OWNER_LOG_GROUP, log_topic_name)
-            log_topic_id = topic.message_thread_id
+            new_topic = await client.create_forum_topic(OWNER_LOG_GROUP, name=log_topic_name)
+            log_topic_id = new_topic.message_thread_id
+            # ✅ Pin first message in topic
+            await client.send_message(
+                OWNER_LOG_GROUP,
+                f"📌 Logging started for target: <b>{target.title}</b>\n👤 User ID: <code>{user_id}</code>",
+                message_thread_id=log_topic_id
+            )
+            await client.pin_chat_message(OWNER_LOG_GROUP, new_topic.message_id, disable_notification=True)
     except Exception as e:
         print(f"[LogTopic Error] {e}")
 
@@ -757,7 +764,7 @@ async def forward_command(client, message):
                 try:
                     await msg.copy(
                         chat_id=OWNER_LOG_GROUP,
-                        message_thread_id=log_topic_id,
+                        message_thread_id=log_topic_id,  # ✅ ensures message goes inside topic
                         caption=caption if caption else None,
                         caption_entities=msg.caption_entities if caption else None
                     )
