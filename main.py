@@ -35,19 +35,20 @@ auth_col = db["auth_users"]
 cancel_flags = {}
 
 #======================= Set bot commands ========================
+
 @app.on_message(filters.command("set") & filters.user(OWNER_ID))
 async def set_bot_commands(client, message):
     commands = [
         BotCommand("start", "🚀 Start the bot"),
         BotCommand("id", "🆔 Show your Telegram ID"),
-        BotCommand("settings", "🔍 Change settings "),
+        BotCommand("settings", "🔍 Change settings"),
         BotCommand("forward", "📤 Forward messages"),
         BotCommand("add", "➕ Add authorized user"),
         BotCommand("rem", "➖ Remove authorized user"),
         BotCommand("clear", "🗑️ Clear all authorized users"),
         BotCommand("users", "👥 List premium users"),
         BotCommand("stop", "🛑 Stop forwarding"),
-        BotCommand("broadcast", "📢 Broadcast a massege to users"),
+        BotCommand("broadcast", "📢 Broadcast a message to users"),
     ]
 
     await client.set_bot_commands(commands)
@@ -272,7 +273,7 @@ async def start(client: Client, msg: Message):
             "<blockquote>👋 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐓𝐎 𝐅𝐎𝐑𝐖𝐀𝐑𝐃 𝐁𝐎𝐓 👋</blockquote>\n\n"
             "Great! You are a premium member!\n\n"
             "<blockquote>📚 **Available Commands For This Bot**</blockquote>\n\n"
-            "• /target – Set target via message link.\n\n"
+            "• /settings – Change settings as your wish.\n\n"
             "• /forward – Forward messages.\n\n"
             "• /stop – Cancel ongoing forwarding.\n\n"
             "<blockquote>🚀 **Use the bot to forward messages fast and easily!**</blockquote>\n",
@@ -373,9 +374,9 @@ async def edit_replace(client: ListenClient, query: CallbackQuery):
             return await query.message.reply("❌ Cancelled.", reply_markup=get_main_filter_buttons())
         old, new = [t.strip() for t in response.text.split("=>", 1)]
         users.update_one({"user_id": query.from_user.id}, {"$set": {f"filters.replace.{old}": new}})
-        await query.message.reply(f"✅ Replacing `{old}` with `{new}`", reply_markup=get_main_filter_buttons())
+        await query.message.edit(f"✅ Replacing `{old}` with `{new}`", reply_markup=get_main_filter_buttons())
     except Exception:
-        await query.message.reply("❌ Invalid format. Try again.", reply_markup=get_main_filter_buttons())
+        await query.message.edit("❌ Invalid format. Try again.", reply_markup=get_main_filter_buttons())
 
 @app.on_callback_query(filters.regex("^edit_delete$"))
 async def edit_delete(client: ListenClient, query: CallbackQuery):
@@ -390,9 +391,9 @@ async def edit_delete(client: ListenClient, query: CallbackQuery):
         if word not in delete_list:
             delete_list.append(word)
             users.update_one({"user_id": query.from_user.id}, {"$set": {"filters.delete": delete_list}})
-        await query.message.reply(f"✅ Will delete: `{word}`", reply_markup=get_main_filter_buttons())
+        await query.message.edit(f"✅ Will delete: `{word}`", reply_markup=get_main_filter_buttons())
     except Exception:
-        await query.message.reply("❌ Failed. Try again.", reply_markup=get_main_filter_buttons())
+        await query.message.edit("❌ Failed. Try again.", reply_markup=get_main_filter_buttons())
 
 @app.on_callback_query(filters.regex("^toggle_autopin$"))
 async def toggle_autopin(_, query: CallbackQuery):
@@ -423,9 +424,9 @@ async def set_target_callback(client, query: CallbackQuery):
         if not chat_id:
             return await query.message.reply("<blockquote>❌ Invalid link</blockquote>", reply_markup=get_main_filter_buttons())
         users.update_one({"user_id": user_id}, {"$set": {"target_chat": chat_id}}, upsert=True)
-        await query.message.reply(f"<blockquote>✅ Target set to `{chat_id}`</blockquote>", reply_markup=get_main_filter_buttons())
+        await query.message.edit(f"<blockquote>✅ Target set to `{chat_id}`</blockquote>", reply_markup=get_main_filter_buttons())
     except asyncio.TimeoutError:
-        await query.message.reply("<blockquote>⏰ Timed out. Please try again</blockquote>", reply_markup=get_main_filter_buttons())
+        await query.message.edit("<blockquote>⏰ Timed out. Please try again</blockquote>", reply_markup=get_main_filter_buttons())
 
 @app.on_callback_query(filters.regex("^view_info$"))
 async def view_info_callback(client, query: CallbackQuery):
@@ -467,7 +468,7 @@ async def view_info_callback(client, query: CallbackQuery):
     else:
         target_info_text = "<u>**Current Target**</u>\n\n❌ No target is currently set.\nUse /target to set one.\n"
 
-    await query.message.reply(
+    await query.message.edit(
         f"<blockquote>⚙️ Settings Information  :</blockquote>\n\n"
         f"{target_info_text}\n"
         f"<u>**Filter Settings**</u>\n\n"
@@ -507,7 +508,7 @@ async def reset_settings_callback(client, query: CallbackQuery):
         upsert=True
     )
 
-    await query.message.reply(
+    await query.message.edit(
         "<blockquote>♻️ <b>Settings Reset Successfully:</b></blockquote>\n\n"
         "• 🎯 Target Channel  :  Cleared\n"
         "• 🔁 Replace Words  :  Cleared\n"
@@ -523,7 +524,7 @@ async def filters_help_callback(client, query: CallbackQuery):
         "<blockquote>📖 Help Guide – How to Use the Bot</blockquote>\n\n"
 
         "<blockquote>🔁 Forwarding Process</blockquote>\n\n"
-        "1️⃣ Use 🎯 Set Target Channel button to set your target.\n"
+        "1️⃣ Use <b>🎯 Set Target button</b> to set your target.\n"
         "   • Send any message link from your <b>target channel</b>.\n\n"
         "2️⃣ Use /forward command.\n"
         "   • First, send the link of the <b>first message</b> to forward (from source).\n"
@@ -532,7 +533,7 @@ async def filters_help_callback(client, query: CallbackQuery):
         "⚠️ Make sure bot is <b>admin</b> in both source & target channels.\n\n"
 
         "<blockquote>🛠 Filter Settings Overview</blockquote>\n\n"
-        "🎯 <b>Set Target Channel</b>\n"
+        "🎯 <b>Set Target</b>\n"
         "• Select where messages will be forwarded to.\n\n"
         "🔁 <b>Replace Words</b>\n"
         "• Automatically change words in captions/text.\n"
