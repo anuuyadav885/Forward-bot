@@ -233,7 +233,6 @@ async def handle_send_to_owner(bot, query):
     await query.answer("✅ Sent to owner!", show_alert=True)
 
 #===================== Detect chat id from message link ===================
-# Utility to extract chat_id and message_id from a message link
 def extract_ids_from_link(link):
     match = re.search(r"https://t.me/(c/)?([\w_]+)/?(\d+)?", link)
     if not match:
@@ -370,6 +369,7 @@ async def edit_replace(client: ListenClient, query: CallbackQuery):
     await query.message.edit("🔁 Send replace in format: `old => new`\nType /cancel to abort.")
     try:
         response = await client.listen(query.message.chat.id, timeout=120)
+        await response.delete()
         if response.text.lower() == "/cancel":
             return await query.message.edit("❌ Cancelled.", reply_markup=get_main_filter_buttons())
         old, new = [t.strip() for t in response.text.split("=>", 1)]
@@ -383,6 +383,7 @@ async def edit_delete(client: ListenClient, query: CallbackQuery):
     await query.message.edit("❌ Send a word to delete\nType /cancel to abort.")
     try:
         response = await client.listen(query.message.chat.id, timeout=120)
+        await response.delete()
         word = response.text.strip()
         if word.lower() == "/cancel":
             return await query.message.edit("❌ Cancelled.", reply_markup=get_main_filter_buttons())
@@ -419,6 +420,7 @@ async def set_target_callback(client, query: CallbackQuery):
     await query.message.edit("<blockquote>📩 Send a message link from the target channel</blockquote>")
     try:
         link_msg = await client.listen(query.message.chat.id, timeout=120)
+        await link_msg.delete()
         link = link_msg.text.strip()
         chat_id, _ = extract_ids_from_link(link)
         if not chat_id:
@@ -548,7 +550,7 @@ async def filters_help_callback(client, query: CallbackQuery):
         "• Resets all settings and filters to default.\n\n"
         "ℹ️ <b>View Settings Info</b>\n"
         "• Shows your current filters, target channel, and active message types.\n\n"
-        "<i>💡 Tip: Use /filters any time to change or review settings.</i>",
+        "<i>💡 Tip: Use /settings any time to change or review settings.</i>",
         reply_markup=get_main_filter_buttons()
     )
 
