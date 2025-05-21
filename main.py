@@ -447,7 +447,7 @@ async def reset_selected_settings(client, message):
                 "filters.replace": {},
                 "filters.delete": [],
                 "filters.types": default_types,
-                "auto_pin": False
+                "filters.auto_pin": True
             }
         },
         upsert=True
@@ -459,7 +459,7 @@ async def reset_selected_settings(client, message):
         "• 🔁 Replace Words  :  Cleared\n"
         "• ❌ Delete Words  :  Cleared\n"
         "• 🔘 Message Types  :  Set to Default\n"
-        "• 📌 Auto Pin  :  Disabled"
+        "• 📌 Auto Pin  :  Enabled"
     )
 #=============================== Set target chat ==================================
 @app.on_message(filters.command("target") & filters.private)
@@ -515,28 +515,28 @@ async def settings_info(client, message):
         try:
             chat = await client.get_chat(target_chat_id)
             target_info_text = (
-                f"**🎯 Current Target**\n\n"
+                f"<u>**Current Target**</u>\n\n"
                 f"• Title  : <b>{chat.title}</b>\n"
                 f"• ID  : <code>{target_chat_id}</code>\n"
             )
         except Exception:
             target_info_text = (
-                f"**🎯 Current Target**\n\n"
+                f"<u>**Current Target**</u>\n\n"
                 f"• ID  : <code>{target_chat_id}</code>\n"
                 f"(⚠️ Bot may not have access to retrieve the title)\n"
             )
     else:
-        target_info_text = "**🎯 Current Target**\n\n❌ No target is currently set.\nUse /target to set one.\n"
+        target_info_text = "<u>**Current Target**</u>\n\n❌ No target is currently set.\nUse /target to set one.\n"
 
     # Final reply
     await message.reply(
         f"<blockquote>⚙️ Settings Information  :</blockquote>\n\n"
         f"{target_info_text}\n"
-        f"**🧰 Filter Settings  :**\n\n"
+        f"<u>**Filter Settings  :**</u>\n\n"
         f"🔁 Replace: {replace}\n"
         f"❌ Delete: {delete}\n"
         f"📌 Auto Pin: {auto_pin}\n\n"
-        f"**Message Types  :**\n\n{type_status}"
+        f"<u>**Message Types  :**</u>\n\n{type_status}"
     )
 
 #========================= Start forward ==============================
