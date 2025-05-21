@@ -73,9 +73,9 @@ async def manage_users(client, message):
 
 @app.on_callback_query(filters.regex("add_user"))
 async def add_user_cb(client, query):
-    await query.message.edit("📥 Send the user ID to **add**:")
-    try:
-        r = await client.listen(query.message.chat.id, timeout=60)
+    await query.message.edit("📥 Send the user ID to **add**:")
+    try:
+        r = await client.listen(query.message.chat.id, timeout=60)
         await r.delete()
         uid = int(r.text.strip())
 
