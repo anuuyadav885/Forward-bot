@@ -532,11 +532,11 @@ async def settings_info(client, message):
     await message.reply(
         f"<blockquote>⚙️ Settings Information  :</blockquote>\n\n"
         f"{target_info_text}\n"
-        f"<u>**Filter Settings  :**</u>\n\n"
+        f"<u>**Filter Settings**</u>\n\n"
         f"🔁 Replace: {replace}\n"
         f"❌ Delete: {delete}\n"
         f"📌 Auto Pin: {auto_pin}\n\n"
-        f"<u>**Message Types  :**</u>\n\n{type_status}"
+        f"<u>**Message Types**</u>\n\n{type_status}"
     )
 
 #========================= Start forward ==============================
