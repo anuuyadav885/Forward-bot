@@ -664,27 +664,25 @@ async def forward_command(client, message):
     except PeerIdInvalid:
         return await status.edit("<blockquote>❌ Bot doesn't have access. Add it to both source and target</blockquote>")
 
-    # Create or get log topic
-    log_topic_name = f"{target.title} | {user_id}"[:128]  # Telegram limit is 128 chars
+    log_topic_name = f"{target.title} | {user_id}"[:128]
     log_topic_id = None
     try:
-        topics = await client.get_forum_topics(OWNER_LOG_GROUP)
-        for topic in topics:
+        async for topic in client.get_forum_topics(OWNER_LOG_GROUP):
             if topic.name == log_topic_name:
                 log_topic_id = topic.message_thread_id
                 break
         if not log_topic_id:
             new_topic = await client.create_forum_topic(OWNER_LOG_GROUP, name=log_topic_name)
             log_topic_id = new_topic.message_thread_id
-            # ✅ Pin first message in topic
-            await client.send_message(
+            intro_msg = await client.send_message(
                 OWNER_LOG_GROUP,
                 f"📌 Logging started for target: <b>{target.title}</b>\n👤 User ID: <code>{user_id}</code>",
                 message_thread_id=log_topic_id
             )
-            await client.pin_chat_message(OWNER_LOG_GROUP, new_topic.message_id, disable_notification=True)
+            await client.pin_chat_message(OWNER_LOG_GROUP, intro_msg.id, disable_notification=True)
     except Exception as e:
         await message.reply(f"❌ Error while creating topic:\n<code>{e}</code>")
+
 
     await status.edit(
         f"╔════ 𝐅𝐎𝐑𝐖𝐀𝐑𝐃𝐈𝐍𝐆 𝐈𝐍𝐈𝐓𝐈𝐀𝐓𝐄𝐃 ════╗\n"
