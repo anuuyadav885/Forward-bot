@@ -40,11 +40,11 @@ cancel_flags = {}
 async def set_bot_commands(client, message):
     commands = [
         BotCommand("start", "🚀 Start the bot"),
-        BotCommand("id", "🆔 Show your Telegram ID"),
-        BotCommand("settings", "🔍 Change settings"),
-        BotCommand("forward", "📤 Forward messages"),
-        BotCommand("manage", "👤 Premium User Management Panel"),
         BotCommand("stop", "🛑 Stop forwarding"),
+        BotCommand("manage", "👤 Premium User Management Panel"),
+        BotCommand("user_id", "🆔 Show your Telegram ID"),
+        BotCommand("forward", "📤 Forward messages"),
+        BotCommand("settings", "🔍 Change settings"),
         BotCommand("broadcast", "📢 Broadcast a message to users"),
     ]
 
@@ -250,7 +250,7 @@ async def auto_react(bot, message):
             continue  # Try another emoji
 
 #=================== ID ============================
-@app.on_message(filters.command("id"))
+@app.on_message(filters.command("user_id"))
 async def send_user_id(bot, message):
     user_id = message.from_user.id
     text = f"<blockquote>👤 Your Telegram ID is :</blockquote>\n\n{user_id}"
@@ -313,10 +313,9 @@ async def start(client: Client, msg: Message):
     if is_authorized(user_id):
         await start_message.edit_text(
             Data.START.format(msg.from_user.mention) +
-            "\n\n"
-            "🎉 <b>Welcome to</b> <u><b>Forward ProBot</b></u> 🎉\n"
-            "<blockquote>🔓 Premium Access Confirmed</blockquote>\n\n"
-            "✨ You're now ready to enjoy all <b>advanced forwarding features</b>:\n"
+            "🎉 <b>Welcome to</b> <u><b>Forward ProBot</b></u> 🎉\n\n"
+            "<blockquote>🔓 Premium Access Confirmed</blockquote>\n"
+            "✨ You're now ready to enjoy all <b>advanced forwarding features</b> :\n\n"
             "• ✏️ Smart Caption Replacement\n"
             "• 🧹 Text Deletion & Filters\n"
             "• 📌 Auto Pin & Media Control\n\n"
@@ -335,10 +334,8 @@ async def start(client: Client, msg: Message):
         await asyncio.sleep(2)
         await start_message.edit_text(
             Data.START.format(msg.from_user.mention) +
-            "\n\n"
-            "🔐 <b>Access Denied</b>\n"
             "<blockquote>🚫 Premium membership is required to use this bot.</blockquote>\n\n"
-            "💎 <b>Features you'll unlock with access:</b>\n"
+            "💎 <b>Features you'll unlock with access:</b>\n\n"
             "• 📤 Superfast message forwarding\n"
             "• ✨ Caption & link editing tools\n"
             "• 📌 Auto-pinning + media type filters\n"
