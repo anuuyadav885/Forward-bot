@@ -283,6 +283,9 @@ VALID_EMOJIS = ["😂", "🔥", "🎉", "🥳", "💯", "😎", "😅", "🙏", 
 
 @app.on_message(filters.text, group=-1)
 async def auto_react(bot, message):
+    result = await force_subscribe(bot, message)
+    if result is not True:
+        return
     if message.edit_date or not message.from_user:
         return  # Skip edited messages or anonymous/channel messages
     add_user(message.from_user.id)  # ✅ Auto add user to DB
@@ -298,6 +301,9 @@ async def auto_react(bot, message):
 #=================== ID ============================
 @app.on_message(filters.command("user_id"))
 async def send_user_id(bot, message):
+    result = await force_subscribe(bot, message)
+    if result is not True:
+        return
     user_id = message.from_user.id
     text = f"<blockquote>👤 Your Telegram ID is :</blockquote>\n\n{user_id}"
 
@@ -434,6 +440,9 @@ caption = (
 
 @app.on_message(filters.command("settings") & filters.private)
 async def show_filter_menu(client: ListenClient, message):
+    result = await force_subscribe(client, ListenClient)
+    if result is not True:
+        return
     user_id = message.from_user.id
     if not is_authorized(user_id):
         return await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
@@ -670,6 +679,9 @@ OWNER_LOG_GROUP = -1002512261473
 #========================= Start forward ==============================
 @app.on_message(filters.command("forward") & filters.private)
 async def forward_command(client, message):
+    result = await force_subscribe(client, message)
+    if result is not True:
+        return
     user_id = message.from_user.id
     if not is_authorized(user_id):
         await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
@@ -888,6 +900,9 @@ async def forward_command(client, message):
 #================ Cancel running process ======================
 @app.on_message(filters.command("stop") & filters.private)
 async def cancel_forwarding(client, message):
+    result = await force_subscribe(client, message)
+    if result is not True:
+        return
     user_id = message.from_user.id
     if not is_authorized(user_id):
         await message.reply("❌ 𝚈𝚘𝚞 𝚊𝚛𝚎 𝚗𝚘𝚝 𝚊𝚞𝚝𝚑𝚘𝚛𝚒𝚣𝚎𝚍.\n\n💎 𝙱𝚞𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖  [꧁ 𝐉𝐨𝐡𝐧 𝐖𝐢𝐜𝐤 ꧂](https://t.me/Dc5txt_bot) !")
