@@ -633,21 +633,23 @@ async def forward_command(client, message):
     if not target_chat:
         return await message.reply("<blockquote>❌ No target is set. Use /target to set one.</blockquote>")
 
-    await message.reply("<blockquote>📩 Send the **start message link** from the source channel</blockquote>")
+    status = await message.reply("<blockquote>📩 Send the **start message link** from the source channel</blockquote>")
     try:
         start_msg = await client.listen(message.chat.id, timeout=120)
+        await start_msg.delete()
         start_chat, start_id = extract_ids_from_link(start_msg.text.strip())
         if not start_chat or not start_id:
-            return await message.reply("<blockquote>❌ Invalid start message link</blockquote>")
+            return await status.edit("<blockquote>❌ Invalid start message link</blockquote>")
 
-        await message.reply("<blockquote>📩 Send the **end message link**</blockquote>")
+        await status.edit("<blockquote>📩 Send the **end message link**</blockquote>")
         end_msg = await client.listen(message.chat.id, timeout=120)
+        await end_msg.delete()
         _, end_id = extract_ids_from_link(end_msg.text.strip())
         if not end_id:
-            return await message.reply("<blockquote>❌ Invalid end message link</blockquote>")
+            return await status.edit("<blockquote>❌ Invalid end message link</blockquote>")
 
     except asyncio.TimeoutError:
-        return await message.reply("<blockquote>⏰ Timed out. Please try again</blockquote>")
+        return await status.edit("<blockquote>⏰ Timed out. Please try again</blockquote>")
 
     total = end_id - start_id + 1
     count = 0
@@ -658,9 +660,9 @@ async def forward_command(client, message):
         source_chat = await client.get_chat(start_chat)
         target = await client.get_chat(target_chat)
     except PeerIdInvalid:
-        return await message.reply("<blockquote>❌ Bot doesn't have access. Add it to both source and target</blockquote>")
+        return await status.edit("<blockquote>❌ Bot doesn't have access. Add it to both source and target</blockquote>")
 
-    status = await message.reply(
+    await status.edit(
         f"╔════ 𝐅𝐎𝐑𝐖𝐀𝐑𝐃𝐈𝐍𝐆 𝐈𝐍𝐈𝐓𝐈𝐀𝐓𝐄𝐃 ════╗\n"
         f"┃\n"
         f"┃ 🗂 Source : `{source_chat.title}`\n"
