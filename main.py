@@ -101,7 +101,7 @@ async def set_bot_commands(client, message):
     commands = [
         BotCommand("start", "🚀 Start the bot"),
         BotCommand("stop", "🛑 Stop forwarding"),
-        BotCommand("user_id", "🆔 Show your Telegram ID"),
+        BotCommand("id", "🆔 Show your Telegram ID"),
         BotCommand("forward", "📤 Forward messages"),
         BotCommand("settings", "🔍 Change settings"),
          BotCommand("manage", "👤 Premium User Management Panel"),
@@ -316,7 +316,7 @@ async def auto_react(bot, message):
             continue  # Try another emoji
 
 #=================== ID ============================
-@app.on_message(filters.command("user_id"))
+@app.on_message(filters.command("id"))
 async def send_user_id(bot, message):
     result = await force_subscribe(bot, message)
     if result is not True:
