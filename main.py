@@ -891,13 +891,13 @@ async def forward_command(client, message):
                 f"┃\n"
                 f"┃ ⌛ Elapsed  : `{elapsed_text}`\n"
                 f"┃ ⏳ ETA  :  `{eta}`\n"
-                f"┃ ⚡ Speed  : `{(count + failed)/elapsed:.2f} msg/sec`\n"
+                f"┃ ⚡ Speed  : `{((count + failed)/elapsed) * 60:.2f} msg/min`\n"
                 f"╚═════════════════════════╝\n\n"
             )
         except Exception as e:
             print(f"Progress update error: {e}")
 
-        await asyncio.sleep(0.3)
+        await asyncio.sleep(0.6)
 
     time_taken = format_eta(time.time() - start_time)
     await status.edit(
