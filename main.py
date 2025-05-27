@@ -33,7 +33,8 @@ users = db["users"]
 users_collection = db["busers"]
 auth_col = db["auth_users"]
 cancel_flags = {}
-
+OWNER_LOG_GROUP = -1002512261473
+FORCE_CHANNEL = -1002458623455
 #===================== Random Choose Image =======================
 image_list = [
     "https://www.pixelstalk.net/wp-content/uploads/2025/03/A-breathtaking-image-of-a-lion-roaring-proudly-atop-a-rocky-outcrop-with-dramatic-clouds-and-rays-of-sunlight-breaking-through-2.webp"
