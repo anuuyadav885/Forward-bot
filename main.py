@@ -64,7 +64,7 @@ async def force_subscribe(client, message):
                 f"📢 𝗝𝗼𝗶𝗻 <u>**{channel_name}**</u> 𝗮𝗻𝗱 𝗰𝗹𝗶𝗰𝗸 𝘁𝗵𝗲 𝗯𝘂𝘁𝘁𝗼𝗻 𝗯𝗲𝗹𝗼𝘄!"
             ),
             reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton(f'📢 Join {channel_name}', url=invite_link.invite_link),
+                InlineKeyboardButton(f'📢 Join {channel_name}', url="https://t.me/+fK5x8NgiYKQ0ZThl"),
                 InlineKeyboardButton("✅ I've Joined", callback_data="checksub")
             ]])
         )
